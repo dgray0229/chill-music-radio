@@ -18,6 +18,12 @@ export function Sidebar() {
     { name: 'Want Radio Play?', path: '/radio-play', icon: 'music' as const },
   ];
 
+  const legalItems = [
+    { name: 'Contact', path: '/contact', icon: 'envelope' as const },
+    { name: 'Terms & Conditions', path: '/terms', icon: 'file-text-o' as const },
+    { name: 'Privacy Policy', path: '/privacy', icon: 'shield' as const },
+  ];
+
   const handleInstallPress = async () => {
     if (canInstall) {
       await promptInstall();
@@ -27,31 +33,59 @@ export function Sidebar() {
   };
 
   return (
-    <View className="w-64 bg-navy-deep h-full pt-8 px-4 border-r border-ocean/20">
-      <View className="mb-10 px-2 flex-row items-center">
-        <FontAwesome name="headphones" size={28} color="#589BE3" />
-        <Text className="text-white text-3xl ml-3" style={{ fontFamily: 'Pacifico' }}>EasyListening</Text>
+    <View className="w-64 bg-navy-deep h-full pt-8 px-4 border-r border-ocean/20" style={{ justifyContent: 'space-between' }}>
+      {/* Top section */}
+      <View>
+        {/* Logo */}
+        <View className="mb-10 px-2 flex-row items-center">
+          <FontAwesome name="headphones" size={28} color="#589BE3" />
+          <Text className="text-white text-3xl ml-3" style={{ fontFamily: 'Pacifico' }}>EasyListening</Text>
+        </View>
+
+        {/* Main nav */}
+        <View className="space-y-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <Pressable
+                key={item.name}
+                onPress={() => router.push(item.path as any)}
+                className={`flex-row items-center px-4 py-3 rounded-md ${isActive ? 'bg-ocean/20' : 'hover:bg-ocean/10'}`}
+              >
+                <FontAwesome name={item.icon} size={20} color={isActive ? '#589BE3' : 'rgba(228,235,252,0.6)'} />
+                <Text className={`ml-4 font-semibold ${isActive ? 'text-ocean' : 'text-soft-sky/60'}`}>
+                  {item.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Divider */}
+        <View className="mx-4 my-4 h-px bg-ocean/15" />
+
+        {/* Legal section */}
+        <View className="space-y-1">
+          {legalItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <Pressable
+                key={item.name}
+                onPress={() => router.push(item.path as any)}
+                className={`flex-row items-center px-4 py-2.5 rounded-md ${isActive ? 'bg-ocean/20' : 'hover:bg-ocean/10'}`}
+              >
+                <FontAwesome name={item.icon} size={16} color={isActive ? '#589BE3' : 'rgba(228,235,252,0.35)'} />
+                <Text className={`ml-4 text-sm ${isActive ? 'text-ocean' : 'text-soft-sky/40'}`}>
+                  {item.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
-      <View className="space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <Pressable
-              key={item.name}
-              onPress={() => router.push(item.path as any)}
-              className={`flex-row items-center px-4 py-3 rounded-md ${isActive ? 'bg-ocean/20' : 'hover:bg-ocean/10'}`}
-            >
-              <FontAwesome name={item.icon} size={20} color={isActive ? '#589BE3' : 'rgba(228,235,252,0.6)'} />
-              <Text className={`ml-4 font-semibold ${isActive ? 'text-ocean' : 'text-soft-sky/60'}`}>
-                {item.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View className="mt-auto mb-6 px-2">
+      {/* Bottom section */}
+      <View className="mb-6 px-2">
         {/* Install App Link */}
         {showInstallOption && (
           <View className="mb-4">
@@ -82,7 +116,15 @@ export function Sidebar() {
           </View>
         )}
 
-        <Text className="text-xs text-ocean/30">EasyListening.com Player v1.0</Text>
+        {/* Copyright */}
+        <View className="border-t border-ocean/10 pt-3">
+          <Text className="text-xs text-ocean/30 leading-4">
+            © 2026 EasyListening.com{'\n'}All rights reserved.
+          </Text>
+          <Text className="text-xs text-ocean/20 mt-1">
+            Licensed with ASCAP, BMI, SESAC
+          </Text>
+        </View>
       </View>
     </View>
   );

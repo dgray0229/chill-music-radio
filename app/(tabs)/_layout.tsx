@@ -8,6 +8,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { Sidebar } from '@/components/Sidebar';
 import { PlayerBar } from '@/components/PlayerBar';
+import { SplashOverlay } from '@/components/SplashOverlay';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 function TabBarIcon(props: {
@@ -28,6 +29,33 @@ export default function TabLayout() {
   // Desktop breakpoint
   const isDesktop = Platform.OS === 'web' && width > 768;
   const isMobileWeb = Platform.OS === 'web' && width <= 768;
+
+  // Splash screen state
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      setShowSplash(true);
+      return;
+    }
+    try {
+      const seen = sessionStorage.getItem('splash-seen');
+      if (!seen) {
+        setShowSplash(true);
+      }
+    } catch {
+      setShowSplash(true);
+    }
+  }, []);
+
+  const dismissSplash = () => {
+    setShowSplash(false);
+    if (Platform.OS === 'web') {
+      try {
+        sessionStorage.setItem('splash-seen', 'true');
+      } catch {}
+    }
+  };
 
   // Dismissible mobile install banner
   const [bannerDismissed, setBannerDismissed] = useState(true); // default hidden until checked
@@ -116,6 +144,28 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="music" color={color} />,
         }}
       />
+      {/* Legal pages — hidden from mobile tab bar */}
+      <Tabs.Screen
+        name="terms"
+        options={{
+          title: 'Terms & Conditions',
+          tabBarButton: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="privacy"
+        options={{
+          title: 'Privacy Policy',
+          tabBarButton: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="contact"
+        options={{
+          title: 'Contact',
+          tabBarButton: () => null,
+        }}
+      />
     </Tabs>
   );
 
@@ -154,6 +204,7 @@ export default function TabLayout() {
           </View>
         </View>
         <PlayerBar />
+        {showSplash && <SplashOverlay onDismiss={dismissSplash} />}
       </View>
     );
   }
@@ -162,6 +213,7 @@ export default function TabLayout() {
     <View style={{ flex: 1 }}>
       {MobileInstallBanner}
       {TabContent}
+      {showSplash && <SplashOverlay onDismiss={dismissSplash} />}
     </View>
   );
 }

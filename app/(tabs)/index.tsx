@@ -74,7 +74,7 @@ export default function RadioScreen() {
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: isDesktop ? 40 : 16, paddingBottom: isDesktop ? 40 : 24, flexGrow: 1 }}>
         <View className="flex-row justify-center mb-8">
-            <View className={`w-full aspect-square rounded-3xl overflow-hidden shadow-2xl ${isDesktop ? 'max-w-md' : 'max-w-xs'}`}>
+            <View style={isDesktop ? { width: '60%', maxWidth: 520, aspectRatio: 1 } : { width: '100%', maxWidth: 320, aspectRatio: 1 }} className="rounded-3xl overflow-hidden shadow-2xl">
               <Image 
                 source={{ uri: artwork }} 
                 className="w-full h-full"
@@ -83,7 +83,7 @@ export default function RadioScreen() {
             </View>
         </View>
 
-        <View className="max-w-md w-full self-center flex-1">
+        <View style={isDesktop ? { width: '80%', maxWidth: 600, alignSelf: 'center' } : { width: '100%' }} className="flex-1">
             <View className="flex-row justify-between items-start mb-8">
               <View className="flex-1 pr-4">
                 <MarqueeText text={track.title} className="text-white text-3xl font-bold mb-2" style={{ color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 8 }} />
@@ -173,7 +173,7 @@ export default function RadioScreen() {
 
       {/* Lyrics Panel on Desktop */}
       {isDesktop && Boolean(lyrics) && (
-          <View className="w-96 bg-navy-light border-l border-ocean/20 p-6 relative overflow-hidden">
+          <View style={{ width: '30%', minWidth: 300, maxWidth: 420 }} className="bg-navy-light border-l border-ocean/20 p-6 relative overflow-hidden">
               {/* Blurred background artwork */}
               <Image 
                  source={{ uri: artwork }}
