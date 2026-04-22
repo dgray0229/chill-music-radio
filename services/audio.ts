@@ -1,11 +1,23 @@
 import { Platform } from 'react-native';
 import { Audio } from 'expo-av';
-import { TrackPlayer, AppKilledPlaybackBehavior, Capability } from './player/trackPlayer';
+import { TrackPlayer, AppKilledPlaybackBehavior, Capability, Event } from './player/trackPlayer';
+
+let IcecastMetadataPlayer: any = null;
+if (Platform.OS === 'web') {
+  try {
+    IcecastMetadataPlayer = require('icecast-metadata-player').default || require('icecast-metadata-player');
+  } catch (e) {
+    console.warn('Could not load icecast-metadata-player on web', e);
+  }
+}
 
 class AudioService {
   private isWeb = Platform.OS === 'web';
   private webSound: Audio.Sound | null = null;
+  private icecastPlayer: any = null;
   private isSetup = false;
+  
+  public onMetadataCallback: ((metadata: any) => void) | null = null;
 
   async setup() {
     if (this.isSetup) return;
@@ -30,6 +42,14 @@ class AudioService {
           ],
           compactCapabilities: [Capability.Play, Capability.Pause],
         });
+        
+        TrackPlayer.addEventListener(Event.PlaybackMetadataReceived, (event) => {
+          if (this.onMetadataCallback && event.title) {
+            // event.title typically contains the ICY StreamTitle (e.g., "Artist - Song")
+            this.onMetadataCallback(event.title);
+          }
+        });
+        
         this.isSetup = true;
       } catch (e) {
         console.warn('TrackPlayer setup error:', e);
@@ -41,14 +61,33 @@ class AudioService {
     if (!this.isSetup) await this.setup();
 
     if (this.isWeb) {
+      // Clean up previous players
       if (this.webSound) {
         await this.webSound.unloadAsync();
+        this.webSound = null;
       }
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: url },
-        { shouldPlay: true }
-      );
-      this.webSound = sound;
+      if (this.icecastPlayer) {
+        this.icecastPlayer.stop();
+        this.icecastPlayer = null;
+      }
+
+      if (IcecastMetadataPlayer) {
+        this.icecastPlayer = new IcecastMetadataPlayer(url, {
+          onMetadata: (meta: any) => {
+            if (this.onMetadataCallback && meta && meta.StreamTitle) {
+              this.onMetadataCallback(meta.StreamTitle);
+            }
+          }
+        });
+        this.icecastPlayer.play();
+      } else {
+        // Fallback to Expo Audio if icecast player is not available
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: url },
+          { shouldPlay: true }
+        );
+        this.webSound = sound;
+      }
 
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new window.MediaMetadata({
@@ -86,8 +125,15 @@ class AudioService {
 
   async pause() {
     if (this.isWeb) {
+      if (this.icecastPlayer) {
+        this.icecastPlayer.stop();
+      }
       if (this.webSound) {
-        await this.webSound.pauseAsync();
+        if (typeof (this.webSound as any).pauseAsync === 'function') {
+          await (this.webSound as any).pauseAsync();
+        } else if (typeof (this.webSound as any).pause === 'function') {
+          (this.webSound as any).pause();
+        }
       }
     } else {
       await TrackPlayer.pause();
@@ -96,9 +142,17 @@ class AudioService {
 
   async stop() {
       if (this.isWeb) {
+        if (this.icecastPlayer) {
+            this.icecastPlayer.stop();
+            this.icecastPlayer = null;
+        }
         if (this.webSound) {
-            await this.webSound.stopAsync();
-            await this.webSound.unloadAsync();
+            if (typeof (this.webSound as any).stopAsync === 'function') {
+                await (this.webSound as any).stopAsync();
+            }
+            if (typeof (this.webSound as any).unloadAsync === 'function') {
+                await (this.webSound as any).unloadAsync();
+            }
             this.webSound = null;
         }
       } else {
@@ -107,19 +161,28 @@ class AudioService {
   }
 
   async setVolume(volume: number) {
-      if (this.isWeb && this.webSound) {
-          if (typeof (this.webSound as any).setVolumeAsync === 'function') {
-              await (this.webSound as any).setVolumeAsync(volume);
-          } else if (typeof (this.webSound as any).setStatusAsync === 'function') {
-              await (this.webSound as any).setStatusAsync({ volume });
-          } else {
+      if (this.isWeb) {
+          if (this.icecastPlayer && this.icecastPlayer.audioElement) {
               try {
-                  (this.webSound as any).volume = volume;
+                  this.icecastPlayer.audioElement.volume = volume;
               } catch (e) {
-                  console.warn('Could not set volume on web', e);
+                  console.warn('Could not set volume on icecastPlayer', e);
               }
           }
-      } else if (!this.isWeb) {
+          if (this.webSound) {
+              if (typeof (this.webSound as any).setVolumeAsync === 'function') {
+                  await (this.webSound as any).setVolumeAsync(volume);
+              } else if (typeof (this.webSound as any).setStatusAsync === 'function') {
+                  await (this.webSound as any).setStatusAsync({ volume });
+              } else {
+                  try {
+                      (this.webSound as any).volume = volume;
+                  } catch (e) {
+                      console.warn('Could not set volume on web', e);
+                  }
+              }
+          }
+      } else {
           await TrackPlayer.setVolume(volume);
       }
   }

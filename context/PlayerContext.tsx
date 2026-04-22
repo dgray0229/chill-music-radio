@@ -34,6 +34,7 @@ interface PlayerContextType {
   lyrics: string | null;
   parsedLyrics: ParsedLyric[] | null;
   trackStartTime: string | null;
+  localSyncTime: number | null;
   highResArt: string | null;
   togglePlayback: () => Promise<void>;
   setVolume: (vol: number) => Promise<void>;
@@ -51,9 +52,17 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [lyrics, setLyrics] = useState<string | null>(null);
   const [parsedLyrics, setParsedLyrics] = useState<ParsedLyric[] | null>(null);
   const [trackStartTime, setTrackStartTime] = useState<string | null>(null);
+  const [localSyncTime, setLocalSyncTime] = useState<number | null>(null);
   const [highResArt, setHighResArt] = useState<string | null>(null);
 
   useEffect(() => {
+    audioService.onMetadataCallback = (title) => {
+      // Received ICY metadata, meaning the track just started playing right now
+      setLocalSyncTime(Date.now());
+      // Trigger a refresh to ensure API data matches the stream
+      loadTrack();
+    };
+
     loadTrack();
     const interval = setInterval(loadTrack, 15000); // Poll every 15s
     return () => clearInterval(interval);
@@ -68,6 +77,11 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             setTrackStartTime(currentTrack.starts || null);
             fetchExtraMetadata(currentTrack.artist, currentTrack.title);
             checkIfFavorite(currentTrack.title);
+            // If the track changed and we aren't playing, we won't get an ICY event.
+            // Reset localSyncTime so it falls back to UTC time.
+            if (!isPlaying) {
+                setLocalSyncTime(null);
+            }
         } else if (currentTrack.starts && currentTrack.starts !== trackStartTime) {
             // Update start time if it shifted but song is the same (sometimes happens in live streams)
             setTrackStartTime(currentTrack.starts);
@@ -153,7 +167,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <PlayerContext.Provider value={{
-      track, isPlaying, isLoading, isFavorite, volume, lyrics, parsedLyrics, trackStartTime, highResArt,
+      track, isPlaying, isLoading, isFavorite, volume, lyrics, parsedLyrics, trackStartTime, localSyncTime, highResArt,
       togglePlayback, setVolume, toggleFavorite
     }}>
       {children}

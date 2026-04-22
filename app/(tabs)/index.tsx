@@ -3,16 +3,15 @@ import { View, Text, Image, Pressable, ActivityIndicator, ScrollView, FlatList, 
 import { FontAwesome } from '@expo/vector-icons';
 import { usePlayer } from '@/context/PlayerContext';
 
-const bgImageDesktop = require('@/assets/images/easylistening-bg-desktop.png');
-const bgImageMobile = require('@/assets/images/easylistening-bg-mobile.png');
+const desktopBg = require('@/assets/images/easylistening-bg-desktop.png');
+const mobileBg = require('@/assets/images/easylistening-bg-mobile.png');
 
 export default function RadioScreen() {
   const { track, isPlaying, isLoading, isFavorite, togglePlayback, toggleFavorite, lyrics, parsedLyrics, trackStartTime, highResArt } = usePlayer();
+  const [streamOffset, setStreamOffset] = useState(7);
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
-  const bgImage = isDesktop ? bgImageDesktop : bgImageMobile;
   
-  const [streamOffset, setStreamOffset] = useState(10); // Default 10s delay
   const [activeLyricIndex, setActiveLyricIndex] = useState(-1);
   const scrollViewRef = useRef<ScrollView>(null);
   const flatListRef = useRef<FlatList>(null);
@@ -35,21 +34,19 @@ export default function RadioScreen() {
     }
 
     const interval = setInterval(() => {
-      // Calculate playback position based on UTC start time and offset
       const startUtcMs = new Date(trackStartTime.replace(' ', 'T') + 'Z').getTime();
-      const nowUtcMs = Date.now();
-      const playbackPositionSecs = (nowUtcMs - startUtcMs) / 1000 - streamOffset;
+      const playbackPositionSecs = (Date.now() - startUtcMs) / 1000 - streamOffset;
       
       let activeIdx = -1;
       for (let i = 0; i < parsedLyrics.length; i++) {
         if (playbackPositionSecs >= parsedLyrics[i].time) {
           activeIdx = i;
         } else {
-          break; // Stop loop once we pass current time
+          break;
         }
       }
       setActiveLyricIndex(activeIdx);
-    }, 500);
+    }, 300);
 
     return () => clearInterval(interval);
   }, [parsedLyrics, trackStartTime, streamOffset]);
@@ -66,22 +63,13 @@ export default function RadioScreen() {
 
   return (
     <View className="flex-1 bg-navy flex-row">
-      {/* Subtle background image — woman/ocean from easylistening.com */}
+      {/* Background Image based on device */}
       <Image 
-        source={bgImage}
+        source={isDesktop ? desktopBg : mobileBg}
         style={StyleSheet.absoluteFillObject}
-        className="opacity-[0.08]"
-        resizeMode="cover"
-        blurRadius={Platform.OS === 'web' ? 0 : 80}
+        className="opacity-20"
+        resizeMode="contain"
       />
-      {/* Web blur fallback — CSS filter works better than blurRadius on web */}
-      {Platform.OS === 'web' && (
-        <Image 
-          source={bgImage}
-          style={[StyleSheet.absoluteFillObject, { filter: 'blur(40px)', opacity: 0.08 } as any]}
-          resizeMode="cover"
-        />
-      )}
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: isDesktop ? 40 : 16, paddingBottom: isDesktop ? 40 : 24, flexGrow: 1 }}>
         <View className="flex-row justify-center mb-8">
@@ -134,6 +122,17 @@ export default function RadioScreen() {
                     />
                     <View className="flex-row items-center justify-between z-10 mb-6">
                         <Text className="text-white text-xl font-bold">Lyrics</Text>
+                        {parsedLyrics && (
+                            <View className="flex-row items-center">
+                                <Pressable onPress={() => setStreamOffset(o => Math.max(0, +(o - 0.5).toFixed(1)))} className="w-7 h-7 rounded-full bg-ocean/30 items-center justify-center">
+                                    <Text className="text-white text-sm font-bold">−</Text>
+                                </Pressable>
+                                <Text className="text-soft-sky/50 text-xs mx-2 w-10 text-center">{streamOffset.toFixed(1)}s</Text>
+                                <Pressable onPress={() => setStreamOffset(o => +(o + 0.5).toFixed(1))} className="w-7 h-7 rounded-full bg-ocean/30 items-center justify-center">
+                                    <Text className="text-white text-sm font-bold">+</Text>
+                                </Pressable>
+                            </View>
+                        )}
                     </View>
 
                     {parsedLyrics ? (
@@ -184,17 +183,15 @@ export default function RadioScreen() {
               <View className="flex-row items-center justify-between z-10 mb-6">
                 <Text className="text-white text-xl font-bold">Lyrics</Text>
                 {parsedLyrics && (
-                  <View className="flex-row items-center space-x-3 bg-navy-deep/70 rounded-full px-3 py-1.5">
-                    <Pressable onPress={() => setStreamOffset(prev => prev - 1)} className="p-1">
-                        <FontAwesome name="minus" size={14} color="#589BE3" />
-                    </Pressable>
-                    <Text className="text-soft-sky/60 text-xs font-medium text-center w-12">
-                        {streamOffset >= 0 ? `-${streamOffset}s` : `+${Math.abs(streamOffset)}s`}
-                    </Text>
-                    <Pressable onPress={() => setStreamOffset(prev => prev + 1)} className="p-1">
-                        <FontAwesome name="plus" size={14} color="#589BE3" />
-                    </Pressable>
-                  </View>
+                    <View className="flex-row items-center">
+                        <Pressable onPress={() => setStreamOffset(o => Math.max(0, +(o - 0.5).toFixed(1)))} className="w-7 h-7 rounded-full bg-ocean/30 items-center justify-center">
+                            <Text className="text-white text-sm font-bold">−</Text>
+                        </Pressable>
+                        <Text className="text-soft-sky/50 text-xs mx-2 w-10 text-center">{streamOffset.toFixed(1)}s</Text>
+                        <Pressable onPress={() => setStreamOffset(o => +(o + 0.5).toFixed(1))} className="w-7 h-7 rounded-full bg-ocean/30 items-center justify-center">
+                            <Text className="text-white text-sm font-bold">+</Text>
+                        </Pressable>
+                    </View>
                 )}
               </View>
 

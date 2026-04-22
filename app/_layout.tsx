@@ -30,6 +30,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Pacifico: require('../assets/fonts/Pacifico-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -43,6 +44,59 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Inject PWA head tags and register service worker at runtime (web only)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const head = document.head;
+
+    // Manifest
+    if (!head.querySelector('link[rel="manifest"]')) {
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = '/manifest.json';
+      head.appendChild(link);
+    }
+
+    // Theme color
+    if (!head.querySelector('meta[name="theme-color"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = '#002F5E';
+      head.appendChild(meta);
+    }
+
+    // Apple PWA meta tags
+    const appleTags = [
+      { name: 'mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+      { name: 'apple-mobile-web-app-title', content: 'EasyListening' },
+    ];
+    appleTags.forEach(({ name, content }) => {
+      if (!head.querySelector(`meta[name="${name}"]`)) {
+        const meta = document.createElement('meta');
+        meta.name = name;
+        meta.content = content;
+        head.appendChild(meta);
+      }
+    });
+
+    // Apple touch icon
+    if (!head.querySelector('link[rel="apple-touch-icon"]')) {
+      const link = document.createElement('link');
+      link.rel = 'apple-touch-icon';
+      link.href = '/icons/icon-192.png';
+      head.appendChild(link);
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch((err: any) => {
+        console.warn('SW registration failed:', err);
+      });
+    }
+  }, []);
 
   if (!loaded) {
     return null;
