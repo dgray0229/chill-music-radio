@@ -4,7 +4,7 @@
 
 @layer utilities {
   .animate-marquee {
-    animation: marquee 15s linear infinite;
+    animation: marqueeSmooth 15s linear infinite;
   }
 
   .bg-ocean-gradient {
@@ -17,7 +17,35 @@
   }
 }
 
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+@keyframes marqueeSmooth {
+  0% { transform: translateX(0%); }
+  10% { transform: translateX(0%); }
+  90% { transform: translateX(-50%); }
+  100% { transform: translateX(-50%); }
+}
+
+/* MarqueeText web overrides */
+.marquee-container {
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.marquee-track.scrolling {
+  animation: marqueeScroll var(--marquee-duration, 12s) linear infinite;
+  padding-right: 80px;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  15% { transform: translateX(0); }
+  85% { transform: translateX(calc(-100% + var(--container-width, 300px))); }
+  100% { transform: translateX(calc(-100% + var(--container-width, 300px))); }
 }

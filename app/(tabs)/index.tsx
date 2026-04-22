@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, Pressable, ActivityIndicator, ScrollView, FlatList, useWindowDimensions, Platform, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { usePlayer } from '@/context/PlayerContext';
+import { MarqueeText } from '@/components/MarqueeText';
 
 const desktopBg = require('@/assets/images/easylistening-bg-desktop.png');
 const mobileBg = require('@/assets/images/easylistening-bg-mobile.png');
@@ -85,8 +86,8 @@ export default function RadioScreen() {
         <View className="max-w-md w-full self-center flex-1">
             <View className="flex-row justify-between items-start mb-8">
               <View className="flex-1 pr-4">
-                <Text className="text-white text-3xl font-bold mb-2" numberOfLines={1}>{track.title}</Text>
-                <Text className="text-soft-sky/60 text-xl" numberOfLines={1}>{track.artist}</Text>
+                <MarqueeText text={track.title} className="text-white text-3xl font-bold mb-2" style={{ color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 8 }} />
+                <MarqueeText text={track.artist} className="text-soft-sky/60 text-xl" style={{ color: 'rgba(228,235,252,0.6)', fontSize: 20 }} speed={30} />
               </View>
               <Pressable onPress={toggleFavorite} className="p-2">
                 <FontAwesome name={isFavorite ? "heart" : "heart-o"} size={28} color={isFavorite ? "#ff4757" : "rgba(228,235,252,0.5)"} />
