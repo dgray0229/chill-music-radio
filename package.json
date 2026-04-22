@@ -1,5 +1,5 @@
 {
-  "name": "music-player",
+  "name": "easy-listening-radio",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
