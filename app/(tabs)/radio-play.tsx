@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Platform, Pressable, Linking } from 'react-native';
+import { View, Text, ScrollView, Platform, Pressable, Linking, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FontAwesome } from '@expo/vector-icons';
@@ -7,7 +7,8 @@ import { palette } from '@/constants/Colors';
 
 export default function RadioPlayScreen() {
   const insets = useSafeAreaInsets();
-  const isDesktop = Platform.OS === 'web' && typeof window !== 'undefined' && window.innerWidth > 768;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width > 768;
 
   return (
     <View className="flex-1 bg-navy-deep relative overflow-hidden">

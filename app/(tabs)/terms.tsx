@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Platform } from 'react-native';
+import { View, Text, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { palette } from '@/constants/Colors';
@@ -19,7 +19,8 @@ function Para({ children }: { children: React.ReactNode }) {
 
 export default function TermsScreen() {
   const insets = useSafeAreaInsets();
-  const isDesktop = Platform.OS === 'web' && typeof window !== 'undefined' && window.innerWidth > 768;
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width > 768;
 
   return (
     <View className="flex-1 bg-navy-deep relative overflow-hidden">

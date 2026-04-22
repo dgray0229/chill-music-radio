@@ -72,7 +72,7 @@ export default function RadioScreen() {
         resizeMode="contain"
       />
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: isDesktop ? 40 : 16, paddingBottom: isDesktop ? 40 : 24, flexGrow: 1 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: isDesktop ? 40 : 16, paddingBottom: isDesktop ? 40 : 24, ...(isDesktop ? { flexGrow: 1 } : {}) }}>
         <View className="flex-row justify-center mb-8">
             <View style={isDesktop ? { width: '60%', maxWidth: 520, aspectRatio: 1 } : { width: '100%', maxWidth: 320, aspectRatio: 1 }} className="rounded-3xl overflow-hidden shadow-2xl">
               <Image 
@@ -83,7 +83,7 @@ export default function RadioScreen() {
             </View>
         </View>
 
-        <View style={isDesktop ? { width: '80%', maxWidth: 600, alignSelf: 'center' } : { width: '100%' }} className="flex-1">
+        <View style={isDesktop ? { width: '80%', maxWidth: 600, alignSelf: 'center' } : { width: '100%' }}>
             <View className="flex-row justify-between items-start mb-8">
               <View className="flex-1 pr-4">
                 <MarqueeText text={track.title} className="text-white text-3xl font-bold mb-2" style={{ color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 8 }} />
@@ -101,7 +101,7 @@ export default function RadioScreen() {
 
             {/* We only show big controls on mobile, as desktop has PlayerBar */}
             {!isDesktop && (
-                <View className="flex-1 justify-end pb-4">
+                <View className="items-center pb-4 mt-4">
                   <View className="flex-row justify-center items-center">
                     <Pressable 
                       onPress={togglePlayback}

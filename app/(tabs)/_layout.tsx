@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { View, Text, Pressable, useWindowDimensions, Platform } from 'react-native';
 
@@ -107,20 +108,15 @@ export default function TabLayout() {
             shadowOpacity: 0,
         },
         headerTintColor: '#fff',
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: !isDesktop,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Radio',
-          tabBarIcon: ({ color }) => <TabBarIcon name="play-circle" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="schedule"
-        options={{
-          title: 'Schedule',
-          tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
+          headerTitle: 'Easy Listening Radio',
+          headerTitleStyle: { fontFamily: 'Pacifico', fontSize: 24, paddingBottom: 4 },
+          tabBarIcon: ({ color }) => <Ionicons name="radio" size={24} color={color} style={{ marginBottom: -3 }} />,
         }}
       />
       <Tabs.Screen
@@ -131,39 +127,53 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="more"
+        options={{
+          title: 'More',
+          tabBarIcon: ({ color }) => <Ionicons name="menu" size={26} color={color} style={{ marginBottom: -3 }} />,
+        }}
+      />
+      {/* Pages accessible via More menu or Sidebar — hidden from tab bar */}
+      <Tabs.Screen
+        name="schedule"
+        options={{
+          title: 'Schedule',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="about"
         options={{
           title: 'About',
-          tabBarIcon: ({ color }) => <TabBarIcon name="info-circle" color={color} />,
+          href: null,
         }}
       />
       <Tabs.Screen
         name="radio-play"
         options={{
-          title: 'Radio Play',
-          tabBarIcon: ({ color }) => <TabBarIcon name="music" color={color} />,
+          title: 'Want Radio Play?',
+          href: null,
         }}
       />
-      {/* Legal pages — hidden from mobile tab bar */}
       <Tabs.Screen
         name="terms"
         options={{
           title: 'Terms & Conditions',
-          tabBarButton: () => null,
+          href: null,
         }}
       />
       <Tabs.Screen
         name="privacy"
         options={{
           title: 'Privacy Policy',
-          tabBarButton: () => null,
+          href: null,
         }}
       />
       <Tabs.Screen
         name="contact"
         options={{
           title: 'Contact',
-          tabBarButton: () => null,
+          href: null,
         }}
       />
     </Tabs>
@@ -183,7 +193,7 @@ export default function TabLayout() {
         <Pressable onPress={handleMobileInstall} style={{ flex: 1, marginLeft: 10 }}>
           <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>
             {isIOSSafari
-              ? 'Tap Share (□↑) → "Add to Home Screen" to install'
+              ? <Text>Tap <Ionicons name="share-outline" size={15} color="#fff" /> → "Add to Home Screen" to install</Text>
               : 'Install EasyListening as an app'}
           </Text>
         </Pressable>

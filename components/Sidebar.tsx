@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, Platform } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
@@ -101,7 +101,7 @@ export function Sidebar() {
             {showIOSTip && isIOSSafari && (
               <View className="mt-2 p-3 bg-navy-light rounded-lg border border-ocean/20">
                 <Text className="text-soft-sky/80 text-xs leading-5">
-                  Tap the <Text className="font-bold text-white">Share</Text> button (□↑) in Safari, then tap{' '}
+                  Tap the <Ionicons name="share-outline" size={13} color="#fff" /> button in Safari, then tap{' '}
                   <Text className="font-bold text-white">"Add to Home Screen"</Text>.
                 </Text>
               </View>
