@@ -6,6 +6,15 @@
   .animate-marquee {
     animation: marquee 15s linear infinite;
   }
+
+  .bg-ocean-gradient {
+    background: linear-gradient(180deg, 
+      #002F5E 0%, 
+      #0A3A6B 40%, 
+      #143d6b 70%,
+      #589BE3 100%
+    );
+  }
 }
 
 @keyframes marquee {

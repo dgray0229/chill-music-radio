@@ -33,7 +33,7 @@ export default function FavoritesScreen() {
   const renderItem = ({ item }: { item: FavoriteTrack }) => (
     <Pressable 
         onPress={() => playFavorite(item)}
-        className="flex-row items-center bg-[#222] p-4 rounded-2xl mb-4"
+        className="flex-row items-center bg-navy-light p-4 rounded-2xl mb-4"
     >
       <Image 
         source={{ uri: item.albumArt || 'https://via.placeholder.com/150' }} 
@@ -41,18 +41,18 @@ export default function FavoritesScreen() {
       />
       <View className="flex-1">
         <Text className="text-white font-bold text-lg" numberOfLines={1}>{item.title}</Text>
-        <Text className="text-gray-400" numberOfLines={1}>{item.artist}</Text>
+        <Text className="text-soft-sky/60" numberOfLines={1}>{item.artist}</Text>
       </View>
-      <FontAwesome name="play-circle" size={32} color="#fff" />
+      <FontAwesome name="play-circle" size={32} color="#589BE3" />
     </Pressable>
   );
 
   return (
-    <View className="flex-1 bg-[#111] px-4 pt-6">
+    <View className="flex-1 bg-navy px-4 pt-6">
       {favorites.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-            <FontAwesome name="heart-o" size={48} color="#444" style={{ marginBottom: 16 }} />
-            <Text className="text-gray-400 text-lg">No favorite tracks yet.</Text>
+            <FontAwesome name="heart-o" size={48} color="rgba(88,155,227,0.3)" style={{ marginBottom: 16 }} />
+            <Text className="text-soft-sky/50 text-lg">No favorite tracks yet.</Text>
         </View>
       ) : (
         <FlatList

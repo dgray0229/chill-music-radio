@@ -27,25 +27,25 @@ export default function ScheduleScreen() {
   };
 
   const renderItem = ({ item }: { item: ShowSchedule }) => (
-    <View className="bg-[#222] p-5 rounded-2xl mb-4 border-l-4 border-white flex-col">
+    <View className="bg-navy-light p-5 rounded-2xl mb-4 border-l-4 border-ocean flex-col">
       <Text className="text-white font-bold text-xl mb-2 flex-wrap" numberOfLines={2}>{item.title}</Text>
       <View className="flex-row items-center">
-          <Text className="text-gray-400 font-medium">{formatTime(item.start)}</Text>
-          {item.end && <Text className="text-gray-400 font-medium"> - {formatTime(item.end)}</Text>}
+          <Text className="text-soft-sky/60 font-medium">{formatTime(item.start)}</Text>
+          {item.end && <Text className="text-soft-sky/60 font-medium"> - {formatTime(item.end)}</Text>}
       </View>
     </View>
   );
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#111]">
-        <ActivityIndicator size="large" color="#fff" />
+      <View className="flex-1 items-center justify-center bg-navy">
+        <ActivityIndicator size="large" color="#589BE3" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#111] px-4 pt-6">
+    <View className="flex-1 bg-navy px-4 pt-6">
       <FlatList
         data={schedule}
         keyExtractor={(item) => item.id}

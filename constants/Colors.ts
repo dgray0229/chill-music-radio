@@ -1,19 +1,37 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+// EasyListening.com Ocean Blue Palette
+const deepNavy = '#002F5E';
+const oceanBlue = '#589BE3';
+const softSky = '#E4EBFC';
+const lavenderAccent = '#8A7CC8';
+const surfaceLight = '#0A3A6B';  // slightly lighter navy for cards
+const surfaceDeep = '#001E3D';   // deeper navy for sidebar/tab bar
+
+export const palette = {
+  deepNavy,
+  oceanBlue,
+  softSky,
+  lavenderAccent,
+  surfaceLight,
+  surfaceDeep,
+};
 
 export default {
   light: {
     text: '#000',
     background: '#fff',
-    tint: tintColorLight,
+    tint: oceanBlue,
     tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
+    tabIconSelected: oceanBlue,
   },
   dark: {
     text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
+    background: deepNavy,
+    surface: surfaceLight,
+    surfaceDeep: surfaceDeep,
+    accent: oceanBlue,
+    accentSecondary: lavenderAccent,
+    tint: oceanBlue,
+    tabIconDefault: 'rgba(228,235,252,0.5)',
+    tabIconSelected: oceanBlue,
   },
 };

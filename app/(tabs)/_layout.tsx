@@ -3,7 +3,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { View, useWindowDimensions, Platform } from 'react-native';
 
-import Colors from '@/constants/Colors';
+import Colors, { palette } from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { Sidebar } from '@/components/Sidebar';
@@ -29,17 +29,17 @@ export default function TabLayout() {
   const TabContent = (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#ffffff',
-        tabBarInactiveTintColor: '#888888',
+        tabBarActiveTintColor: palette.oceanBlue,
+        tabBarInactiveTintColor: 'rgba(228,235,252,0.5)',
         tabBarStyle: isDesktop ? { display: 'none' } : {
-            backgroundColor: '#111111',
+            backgroundColor: palette.surfaceDeep,
             borderTopWidth: 0,
             paddingBottom: 10 + insets.bottom,
             paddingTop: 5,
             height: 65 + insets.bottom,
         },
         headerStyle: {
-            backgroundColor: '#111111',
+            backgroundColor: palette.surfaceDeep,
             borderBottomWidth: 0,
             elevation: 0,
             shadowOpacity: 0,
@@ -73,7 +73,7 @@ export default function TabLayout() {
 
   if (isDesktop) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#121212', flexDirection: 'column' }}>
+      <View style={{ flex: 1, backgroundColor: palette.deepNavy, flexDirection: 'column' }}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <Sidebar />
           <View style={{ flex: 1 }}>
