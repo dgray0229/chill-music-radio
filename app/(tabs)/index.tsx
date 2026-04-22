@@ -1,31 +1,167 @@
-import { StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Image, Pressable, ActivityIndicator, ScrollView, FlatList, useWindowDimensions, Platform } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
+import { usePlayer } from '@/context/PlayerContext';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+export default function RadioScreen() {
+  const { track, isPlaying, isLoading, isFavorite, togglePlayback, toggleFavorite, lyrics, parsedLyrics, trackStartTime, highResArt } = usePlayer();
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width > 768;
+  
+  const [streamOffset, setStreamOffset] = useState(10); // Default 10s delay
+  const [activeLyricIndex, setActiveLyricIndex] = useState(-1);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
 
-export default function TabOneScreen() {
+  useEffect(() => {
+    if (activeLyricIndex >= 0 && flatListRef.current && parsedLyrics && activeLyricIndex < parsedLyrics.length) {
+        flatListRef.current.scrollToIndex({
+            index: activeLyricIndex,
+            animated: true,
+            viewPosition: 0.5
+        });
+    }
+  }, [activeLyricIndex, parsedLyrics]);
+
+  useEffect(() => {
+    if (!parsedLyrics || !trackStartTime) {
+      setActiveLyricIndex(-1);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      // Calculate playback position based on UTC start time and offset
+      // Airtime Pro UTC time might look like "2023-10-27 15:30:00" -> parsing
+      const startUtcMs = new Date(trackStartTime.replace(' ', 'T') + 'Z').getTime();
+      const nowUtcMs = Date.now();
+      const playbackPositionSecs = (nowUtcMs - startUtcMs) / 1000 - streamOffset;
+      
+      let activeIdx = -1;
+      for (let i = 0; i < parsedLyrics.length; i++) {
+        if (playbackPositionSecs >= parsedLyrics[i].time) {
+          activeIdx = i;
+        } else {
+          break; // Stop loop once we pass current time
+        }
+      }
+      setActiveLyricIndex(activeIdx);
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [parsedLyrics, trackStartTime, streamOffset]);
+
+  if (isLoading || !track) {
+    return (
+      <View className="flex-1 items-center justify-center bg-[#121212]">
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
+  const artwork = highResArt || track.albumArt;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View className="flex-1 bg-[#121212] flex-row">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 40, paddingBottom: 40, flexGrow: 1 }}>
+        <View className="flex-row justify-center mb-8">
+            <View className="w-full max-w-md aspect-square rounded-3xl overflow-hidden shadow-2xl">
+              <Image 
+                source={{ uri: artwork }} 
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            </View>
+        </View>
+
+        <View className="max-w-md w-full self-center">
+            <View className="flex-row justify-between items-start mb-8">
+              <View className="flex-1 pr-4">
+                <Text className="text-white text-3xl font-bold mb-2" numberOfLines={1}>{track.title}</Text>
+                <Text className="text-gray-400 text-xl" numberOfLines={1}>{track.artist}</Text>
+              </View>
+              <Pressable onPress={toggleFavorite} className="p-2">
+                <FontAwesome name={isFavorite ? "heart" : "heart-o"} size={28} color={isFavorite ? "#ff4757" : "#fff"} />
+              </Pressable>
+            </View>
+
+            {/* Playback Progress Simulation */}
+            <View className="w-full h-1 bg-gray-800 rounded-full mb-8 overflow-hidden">
+              <View className="h-full bg-white w-full rounded-full animate-pulse" />
+            </View>
+
+            {/* We only show big controls on mobile, as desktop has PlayerBar */}
+            {!isDesktop && (
+                <View className="flex-1 justify-end pb-4">
+                  <View className="flex-row justify-center items-center">
+                    <Pressable 
+                      onPress={togglePlayback}
+                      className="w-20 h-20 bg-white rounded-full items-center justify-center shadow-lg active:opacity-80"
+                    >
+                      <FontAwesome name={isPlaying ? "pause" : "play"} size={32} color="#111" style={{ marginLeft: isPlaying ? 0 : 5 }} />
+                    </Pressable>
+                  </View>
+                </View>
+            )}
+        </View>
+      </ScrollView>
+
+      {/* Lyrics Panel on Desktop */}
+      {isDesktop && lyrics && (
+          <View className="w-96 bg-[#181818] border-l border-[#282828] p-6 relative overflow-hidden">
+              {/* Blurred background artwork */}
+              <Image 
+                 source={{ uri: artwork }}
+                 className="absolute inset-0 w-full h-full opacity-20 blur-3xl"
+              />
+              
+              <View className="flex-row items-center justify-between z-10 mb-6">
+                <Text className="text-white text-xl font-bold">Lyrics</Text>
+                {parsedLyrics && (
+                  <View className="flex-row items-center space-x-3 bg-black/50 rounded-full px-3 py-1.5">
+                    <Pressable onPress={() => setStreamOffset(prev => prev - 1)} className="p-1">
+                        <FontAwesome name="minus" size={14} color="#fff" />
+                    </Pressable>
+                    <Text className="text-gray-300 text-xs font-medium text-center w-12">
+                        {streamOffset >= 0 ? `-${streamOffset}s` : `+${Math.abs(streamOffset)}s`}
+                    </Text>
+                    <Pressable onPress={() => setStreamOffset(prev => prev + 1)} className="p-1">
+                        <FontAwesome name="plus" size={14} color="#fff" />
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+
+              {parsedLyrics ? (
+                  <FlatList
+                      ref={flatListRef}
+                      data={parsedLyrics}
+                      keyExtractor={(_, index) => index.toString()}
+                      showsVerticalScrollIndicator={false}
+                      className="flex-1 z-10"
+                      contentContainerStyle={{ paddingTop: 40, paddingBottom: 250 }}
+                      onScrollToIndexFailed={(info) => {
+                          const wait = new Promise(resolve => setTimeout(resolve, 500));
+                          wait.then(() => {
+                              flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+                          });
+                      }}
+                      renderItem={({ item, index }) => (
+                          <Text 
+                            className={`text-lg leading-10 font-medium transition-all duration-300 ${index === activeLyricIndex ? 'text-white text-2xl font-bold scale-105' : 'text-gray-400'}`}
+                          >
+                              {item.text}
+                          </Text>
+                      )}
+                  />
+              ) : (
+                  <ScrollView className="flex-1 z-10" showsVerticalScrollIndicator={false}>
+                      <Text className="text-gray-200 text-lg leading-10 font-medium pb-24">
+                          {lyrics}
+                      </Text>
+                  </ScrollView>
+              )}
+          </View>
+      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});

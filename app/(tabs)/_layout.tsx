@@ -1,59 +1,84 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs } from 'expo-router';
+import { View, useWindowDimensions, Platform } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { Sidebar } from '@/components/Sidebar';
+import { PlayerBar } from '@/components/PlayerBar';
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
 }
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { width } = useWindowDimensions();
 
-  return (
+  // Desktop breakpoint
+  const isDesktop = Platform.OS === 'web' && width > 768;
+
+  const TabContent = (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
+        tabBarActiveTintColor: '#ffffff',
+        tabBarInactiveTintColor: '#888888',
+        tabBarStyle: isDesktop ? { display: 'none' } : {
+            backgroundColor: '#111111',
+            borderTopWidth: 0,
+            paddingBottom: 5,
+        },
+        headerStyle: {
+            backgroundColor: '#111111',
+            borderBottomWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+        },
+        headerTintColor: '#fff',
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: 'Radio',
+          tabBarIcon: ({ color }) => <TabBarIcon name="play-circle" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="schedule"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Schedule',
+          tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="favorites"
+        options={{
+          title: 'Favorites',
+          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
         }}
       />
     </Tabs>
   );
+
+  if (isDesktop) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#121212', flexDirection: 'column' }}>
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          <Sidebar />
+          <View style={{ flex: 1 }}>
+            {TabContent}
+          </View>
+        </View>
+        <PlayerBar />
+      </View>
+    );
+  }
+
+  return TabContent;
 }
