@@ -12,16 +12,17 @@ export default function RadioScreen() {
   const [activeLyricIndex, setActiveLyricIndex] = useState(-1);
   const scrollViewRef = useRef<ScrollView>(null);
   const flatListRef = useRef<FlatList>(null);
+  const mobileFlatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    if (activeLyricIndex >= 0 && flatListRef.current && parsedLyrics && activeLyricIndex < parsedLyrics.length) {
-        flatListRef.current.scrollToIndex({
-            index: activeLyricIndex,
-            animated: true,
-            viewPosition: 0.5
-        });
+    if (activeLyricIndex >= 0 && parsedLyrics && activeLyricIndex < parsedLyrics.length) {
+        if (isDesktop && flatListRef.current) {
+            flatListRef.current.scrollToIndex({ index: activeLyricIndex, animated: true, viewPosition: 0.5 });
+        } else if (!isDesktop && mobileFlatListRef.current) {
+            mobileFlatListRef.current.scrollToIndex({ index: activeLyricIndex, animated: true, viewPosition: 0.5 });
+        }
     }
-  }, [activeLyricIndex, parsedLyrics]);
+  }, [activeLyricIndex, parsedLyrics, isDesktop]);
 
   useEffect(() => {
     if (!parsedLyrics || !trackStartTime) {
@@ -62,9 +63,9 @@ export default function RadioScreen() {
 
   return (
     <View className="flex-1 bg-[#121212] flex-row">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 40, paddingBottom: 40, flexGrow: 1 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingTop: isDesktop ? 40 : 16, paddingBottom: isDesktop ? 40 : 24, flexGrow: 1 }}>
         <View className="flex-row justify-center mb-8">
-            <View className="w-full max-w-md aspect-square rounded-3xl overflow-hidden shadow-2xl">
+            <View className={`w-full aspect-square rounded-3xl overflow-hidden shadow-2xl ${isDesktop ? 'max-w-md' : 'max-w-xs'}`}>
               <Image 
                 source={{ uri: artwork }} 
                 className="w-full h-full"
@@ -73,7 +74,7 @@ export default function RadioScreen() {
             </View>
         </View>
 
-        <View className="max-w-md w-full self-center">
+        <View className="max-w-md w-full self-center flex-1">
             <View className="flex-row justify-between items-start mb-8">
               <View className="flex-1 pr-4">
                 <Text className="text-white text-3xl font-bold mb-2" numberOfLines={1}>{track.title}</Text>
@@ -102,16 +103,62 @@ export default function RadioScreen() {
                   </View>
                 </View>
             )}
+
+            {/* Mobile Lyrics Section */}
+            {!isDesktop && Boolean(lyrics) && (
+                <View className="w-full mt-12 bg-[#181818] rounded-3xl p-6 relative overflow-hidden h-[400px] mb-8">
+                    <Image 
+                       source={{ uri: artwork }}
+                       className="absolute inset-0 w-full h-full opacity-20"
+                       blurRadius={50}
+                    />
+                    <View className="flex-row items-center justify-between z-10 mb-6">
+                        <Text className="text-white text-xl font-bold">Lyrics</Text>
+                    </View>
+
+                    {parsedLyrics ? (
+                        <FlatList
+                            ref={mobileFlatListRef}
+                            data={parsedLyrics}
+                            keyExtractor={(_, index) => index.toString()}
+                            showsVerticalScrollIndicator={false}
+                            nestedScrollEnabled={true}
+                            className="flex-1 z-10"
+                            contentContainerStyle={{ paddingBottom: 150 }}
+                            onScrollToIndexFailed={(info) => {
+                                const wait = new Promise(resolve => setTimeout(resolve, 500));
+                                wait.then(() => {
+                                    mobileFlatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+                                });
+                            }}
+                            renderItem={({ item, index }) => (
+                                <Text 
+                                  className={`text-lg leading-10 px-4 ${index === activeLyricIndex ? 'text-white text-2xl font-bold' : 'text-gray-400 font-medium'}`}
+                                >
+                                    {item.text}
+                                </Text>
+                            )}
+                        />
+                    ) : (
+                        <ScrollView className="flex-1 z-10" nestedScrollEnabled={true} showsVerticalScrollIndicator={false}>
+                            <Text className="text-gray-200 text-lg leading-10 font-medium pb-8">
+                                {lyrics}
+                            </Text>
+                        </ScrollView>
+                    )}
+                </View>
+            )}
         </View>
       </ScrollView>
 
       {/* Lyrics Panel on Desktop */}
-      {isDesktop && lyrics && (
+      {isDesktop && Boolean(lyrics) && (
           <View className="w-96 bg-[#181818] border-l border-[#282828] p-6 relative overflow-hidden">
               {/* Blurred background artwork */}
               <Image 
                  source={{ uri: artwork }}
-                 className="absolute inset-0 w-full h-full opacity-20 blur-3xl"
+                 className="absolute inset-0 w-full h-full opacity-20"
+                 blurRadius={50}
               />
               
               <View className="flex-row items-center justify-between z-10 mb-6">
@@ -147,7 +194,7 @@ export default function RadioScreen() {
                       }}
                       renderItem={({ item, index }) => (
                           <Text 
-                            className={`text-lg leading-10 font-medium transition-all duration-300 ${index === activeLyricIndex ? 'text-white text-2xl font-bold scale-105' : 'text-gray-400'}`}
+                            className={`text-lg leading-10 px-4 ${index === activeLyricIndex ? 'text-white text-2xl font-bold' : 'text-gray-400 font-medium'}`}
                           >
                               {item.text}
                           </Text>

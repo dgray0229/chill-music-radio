@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, Image } from 'react-native';
+import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { usePlayer } from '@/context/PlayerContext';
 
@@ -15,8 +15,15 @@ export function PlayerBar() {
       {/* Left: Track Info */}
       <View className="flex-row items-center w-1/3">
         <Image source={{ uri: artwork }} className="w-16 h-16 rounded-md mr-4" />
-        <View className="flex-1">
-          <Text className="text-white font-bold text-sm" numberOfLines={1}>{track.title}</Text>
+        <View className="flex-1 overflow-hidden" style={Platform.OS === 'web' ? { whiteSpace: 'nowrap', display: 'flex', flexDirection: 'column' } as any : {}}>
+          <View style={Platform.OS === 'web' && track.title.length > 35 ? { display: 'inline-block', whiteSpace: 'nowrap' } as any : {}}>
+            <Text 
+              className={`text-white font-bold text-sm ${track.title.length > 35 ? 'animate-marquee' : ''}`} 
+              numberOfLines={track.title.length > 35 ? undefined : 1}
+            >
+              {track.title}
+            </Text>
+          </View>
           <Text className="text-gray-400 text-xs mt-1" numberOfLines={1}>{track.artist}</Text>
         </View>
         <Pressable onPress={toggleFavorite} className="ml-4 p-2">

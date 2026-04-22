@@ -16,10 +16,23 @@ export default function ScheduleScreen() {
     setIsLoading(false);
   };
 
+  const formatTime = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr.replace(' ', 'T') + 'Z');
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch(e) {
+        return dateStr;
+    }
+  };
+
   const renderItem = ({ item }: { item: ShowSchedule }) => (
-    <View className="bg-[#222] p-5 rounded-2xl mb-4 border-l-4 border-white">
-      <Text className="text-white font-bold text-xl mb-1">{item.title}</Text>
-      <Text className="text-gray-400">{item.start} - {item.end}</Text>
+    <View className="bg-[#222] p-5 rounded-2xl mb-4 border-l-4 border-white flex-col">
+      <Text className="text-white font-bold text-xl mb-2 flex-wrap" numberOfLines={2}>{item.title}</Text>
+      <View className="flex-row items-center">
+          <Text className="text-gray-400 font-medium">{formatTime(item.start)}</Text>
+          {item.end && <Text className="text-gray-400 font-medium"> - {formatTime(item.end)}</Text>}
+      </View>
     </View>
   );
 

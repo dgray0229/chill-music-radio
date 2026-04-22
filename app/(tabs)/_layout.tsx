@@ -16,9 +16,12 @@ function TabBarIcon(props: {
   return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
 }
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // Desktop breakpoint
   const isDesktop = Platform.OS === 'web' && width > 768;
@@ -31,7 +34,9 @@ export default function TabLayout() {
         tabBarStyle: isDesktop ? { display: 'none' } : {
             backgroundColor: '#111111',
             borderTopWidth: 0,
-            paddingBottom: 5,
+            paddingBottom: 10 + insets.bottom,
+            paddingTop: 5,
+            height: 65 + insets.bottom,
         },
         headerStyle: {
             backgroundColor: '#111111',

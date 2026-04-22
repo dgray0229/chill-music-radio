@@ -55,17 +55,21 @@ import { View, Platform } from 'react-native';
 
 import { PlayerProvider } from '../context/PlayerContext';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <PlayerProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-      </PlayerProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <PlayerProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          </Stack>
+        </PlayerProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

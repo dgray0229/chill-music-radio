@@ -111,10 +111,13 @@ export const fetchAlbumArt = async (artist: string, title: string): Promise<stri
 
 export const fetchLyrics = async (artist: string, title: string): Promise<string | null> => {
     try {
+        const cleanTitle = title.replace(/\s*[\(\[]\s*(feat|ft)\.?.*$/i, '');
+        const cleanArtist = artist.split(/[,&]/)[0].trim();
+
         const response = await axios.get(`https://lrclib.net/api/get`, {
             params: {
-                artist_name: artist,
-                track_name: title
+                artist_name: cleanArtist,
+                track_name: cleanTitle
             }
         });
         if (response.data) {
