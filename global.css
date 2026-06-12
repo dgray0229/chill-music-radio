@@ -1,49 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Minimal global styles for web platform.
+   No TailwindCSS — just reset and marquee animation for ScrollingText. */
 
-@layer utilities {
-  .animate-marquee {
-    animation: marqueeSmooth 15s linear infinite;
-  }
-
-  .bg-ocean-gradient {
-    background: linear-gradient(180deg, 
-      #002F5E 0%, 
-      #0A3A6B 40%, 
-      #143d6b 70%,
-      #589BE3 100%
-    );
-  }
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #0B1A2E;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@keyframes marqueeSmooth {
-  0% { transform: translateX(0%); }
-  10% { transform: translateX(0%); }
-  90% { transform: translateX(-50%); }
-  100% { transform: translateX(-50%); }
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
 
-/* MarqueeText web overrides */
+/* Scrollbar theming */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(77,166,255,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(77,166,255,0.4); }
+
+/* ScrollingText web animation */
 .marquee-container {
   overflow: hidden;
   display: flex;
   flex-direction: row;
   align-items: center;
 }
-
 .marquee-track {
   display: inline-flex;
   white-space: nowrap;
   flex-shrink: 0;
 }
-
 .marquee-track.scrolling {
-  animation: marqueeScroll var(--marquee-duration, 12s) linear infinite;
+  animation: marqueeSlide var(--marquee-duration, 12s) linear infinite;
   padding-right: 80px;
 }
 
-@keyframes marqueeScroll {
+@keyframes marqueeSlide {
   0% { transform: translateX(0); }
   15% { transform: translateX(0); }
   85% { transform: translateX(calc(-100% + var(--container-width, 300px))); }

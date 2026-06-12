@@ -1,126 +1,157 @@
 import React from 'react';
-import { View, Text, ScrollView, Platform, Pressable, Linking, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { palette } from '@/constants/Colors';
+import { ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View className="mb-8">
-      <Text className="text-white text-xl font-bold mb-3">{title}</Text>
-      {children}
-    </View>
-  );
+const COLORS = {
+  ink: '#0B1A2E',
+  midnight: '#061222',
+  slate: '#142D4F',
+  electric: '#4DA6FF',
+  mist: '#D8E4F8',
+};
+
+interface SectionProps {
+  title: string;
+  children: string;
 }
 
-function Para({ children }: { children: React.ReactNode }) {
-  return <Text className="text-soft-sky/80 text-base leading-7 mb-4">{children}</Text>;
+function Section({ title, children }: SectionProps) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.subheader}>{title}</Text>
+      <Text style={styles.body}>{children}</Text>
+    </View>
+  );
 }
 
 export default function PrivacyScreen() {
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width > 768;
-
   return (
-    <View className="flex-1 bg-navy-deep relative overflow-hidden">
-      <LinearGradient
-        colors={[palette.deepNavy, palette.oceanBlue]}
-        className="absolute w-full h-full opacity-30"
-      />
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingTop: isDesktop ? 60 : Math.max(insets.top + 20, 40),
-          paddingBottom: isDesktop ? 60 : insets.bottom + 120,
-          paddingHorizontal: 24,
-          alignItems: 'center',
-        }}
-      >
-        <View className="w-full max-w-3xl bg-navy-light/80 p-8 rounded-3xl backdrop-blur-md border border-ocean/20">
-          <Text style={{ fontFamily: 'Pacifico' }} className="text-4xl text-white mb-2 text-center">
-            Privacy Policy
-          </Text>
-          <Text className="text-soft-sky/50 text-sm text-center mb-8">Last updated: 2026</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.header}>Privacy Policy</Text>
+      <Text style={styles.effective}>Effective Date: June 1, 2026</Text>
 
-          <Section title="Introduction">
-            <Para>
-              EasyListening.com ("EL", "we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our radio streaming service at www.EasyListening.com.
-            </Para>
-          </Section>
+      <Section title="1. Introduction">
+        Chill Radio ("we," "our," or "us") is committed to protecting your
+        privacy. This Privacy Policy explains how we handle information when you
+        use the Chill Radio application ("the App").
+      </Section>
 
-          <Section title="Information We Collect">
-            <Para>
-              We may collect the following types of information:{'\n\n'}
-              • Email addresses and contact information from those who communicate with us via email, phone, or other methods{'\n'}
-              • Aggregate information on what pages our users access or visit{'\n'}
-              • Information volunteered by users, such as survey responses, site registrations, and account signups{'\n'}
-              • Music submissions and related materials from artists seeking airplay
-            </Para>
-          </Section>
+      <Section title="2. Information We Do Not Collect">
+        Chill Radio does not collect, store, or process any personal information.
+        We do not require account creation, login credentials, email addresses,
+        or any other personally identifiable information to use the App. You can
+        enjoy Chill Radio completely anonymously.
+      </Section>
 
-          <Section title="How We Use Your Information">
-            <Para>
-              The information we collect is used to:{'\n\n'}
-              • Improve the content and functionality of our website and streaming service{'\n'}
-              • Contact individuals and businesses for marketing purposes{'\n'}
-              • Process and evaluate music submissions for potential airplay{'\n'}
-              • Respond to inquiries and provide customer support{'\n'}
-              • Comply with legal obligations
-            </Para>
-          </Section>
+      <Section title="3. Analytics Data">
+        We may collect anonymous, aggregated analytics data to understand how
+        the App is used and to improve the listening experience. This data
+        includes general usage patterns such as session duration, station
+        popularity, and app performance metrics. This data cannot be used to
+        identify individual users.
+      </Section>
 
-          <Section title="Third-Party Sharing">
-            <Para>
-              Information we collect may be shared with or used by third parties for purposes including marketing and service improvement. We do not sell your personal information. Third-party content displayed on our site is subject to its own terms and the third party's privacy practices.
-            </Para>
-          </Section>
+      <Section title="4. Cookies and Tracking">
+        Chill Radio does not use cookies, advertising trackers, or any
+        third-party tracking technologies. We do not serve advertisements and
+        have no advertising partners.
+      </Section>
 
-          <Section title="Cookies and Tracking">
-            <Para>
-              Our website may use cookies and similar tracking technologies to enhance your browsing experience, analyze site traffic, and understand user behavior. You can control cookie settings through your browser preferences.
-            </Para>
-          </Section>
+      <Section title="5. Third-Party Services">
+        The App may stream music content through third-party hosting providers.
+        These providers do not receive any personal information from Chill Radio
+        users. We recommend reviewing the privacy policies of any third-party
+        services you interact with independently.
+      </Section>
 
-          <Section title="Data Retention">
-            <Para>
-              We retain your personal information only for as long as necessary to fulfill the purposes for which it was collected, or as required by applicable laws and regulations. Music submissions may be retained indefinitely as part of our programming library.
-            </Para>
-          </Section>
+      <Section title="6. Data Security">
+        Although we do not collect personal data, we take reasonable measures to
+        ensure the security and integrity of our App and its infrastructure.
+      </Section>
 
-          <Section title="Your Rights">
-            <Para>
-              You have the right to:{'\n\n'}
-              • Opt out of marketing communications by sending an email with "UNSUBSCRIBE" in the subject line{'\n'}
-              • Request deletion of your submitted materials (note: we cannot guarantee complete removal from third-party devices or repositories){'\n'}
-              • Access or update your personal information by contacting us
-            </Para>
-          </Section>
+      <Section title="7. Children's Privacy">
+        Chill Radio does not knowingly collect any information from children
+        under the age of 13. Since we do not collect personal data from any
+        users, the App is safe for listeners of all ages.
+      </Section>
 
-          <Section title="Children's Privacy">
-            <Para>
-              Our service is not directed to children under the age of 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us so we can take appropriate action.
-            </Para>
-          </Section>
+      <Section title="8. Changes to This Policy">
+        We may update this Privacy Policy from time to time. Any changes will be
+        reflected on this page with an updated effective date. We encourage you
+        to review this policy periodically.
+      </Section>
 
-          <Section title="Changes to This Policy">
-            <Para>
-              We may update this Privacy Policy from time to time. We encourage you to review this page periodically for the latest information on our privacy practices. Your continued use of the site after any changes constitutes your acceptance of the updated policy.
-            </Para>
-          </Section>
+      <Section title="9. Contact Us">
+        If you have any questions or concerns about this Privacy Policy, please
+        reach out to us at hello@chillradio.app.
+      </Section>
 
-          <Section title="Contact Us">
-            <Para>
-              If you have any questions or concerns about this Privacy Policy, please contact us at:
-            </Para>
-            <Pressable onPress={() => Linking.openURL('mailto:contact@easylistening.com')}>
-              <Text className="text-ocean text-lg font-bold text-center">
-                contact@easylistening.com
-              </Text>
-            </Pressable>
-          </Section>
-        </View>
-      </ScrollView>
-    </View>
+      <Text style={styles.footer}>© 2026 Chill Radio. All rights reserved.</Text>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.ink,
+  },
+  contentContainer: {
+    padding: 24,
+    paddingBottom: 120,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+  },
+  effective: {
+    fontSize: 13,
+    color: COLORS.mist,
+    opacity: 0.6,
+    marginBottom: 24,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+  subheader: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.electric,
+    marginBottom: 10,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+    letterSpacing: 0.5,
+  },
+  section: {
+    backgroundColor: 'rgba(20, 45, 79, 0.35)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 166, 255, 0.08)',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      },
+      default: {},
+    }),
+  },
+  body: {
+    fontSize: 14.5,
+    lineHeight: 22,
+    color: COLORS.mist,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+  footer: {
+    fontSize: 12,
+    color: COLORS.mist,
+    opacity: 0.4,
+    textAlign: 'center',
+    marginTop: 24,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+});

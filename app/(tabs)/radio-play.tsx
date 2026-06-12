@@ -1,96 +1,184 @@
-import React from 'react';
-import { View, Text, ScrollView, Platform, Pressable, Linking, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome } from '@expo/vector-icons';
-import { palette } from '@/constants/Colors';
+import React, { useEffect } from 'react';
+import { ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
+import { usePostHog } from 'posthog-react-native';
+
+const COLORS = {
+  ink: '#0B1A2E',
+  midnight: '#061222',
+  slate: '#142D4F',
+  electric: '#4DA6FF',
+  mist: '#D8E4F8',
+};
+
+const GUIDELINES = [
+  'Tracks must be original compositions that you own full rights to.',
+  'Accepted genres: Lo-fi, Ambient, Down-tempo, Chillhop, and Dreamy Beats.',
+  'Submissions must be high-quality files (WAV/FLAC preferred, 320kbps MP3 minimum).',
+  'Include track title, artist name, social links, BPM, and a short bio.',
+  'Instrumental tracks are preferred, but vocals are welcome if they match the vibe.',
+  'Curation reviews take approximately 1-2 weeks. We will contact you if selected.',
+];
 
 export default function RadioPlayScreen() {
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width > 768;
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    posthog.capture('music_submission_viewed');
+  }, [posthog]);
 
   return (
-    <View className="flex-1 bg-navy-deep relative overflow-hidden">
-      <LinearGradient
-        colors={[palette.deepNavy, palette.oceanBlue]}
-        className="absolute w-full h-full opacity-30"
-      />
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ 
-          paddingTop: isDesktop ? 60 : Math.max(insets.top + 20, 40),
-          paddingBottom: isDesktop ? 60 : insets.bottom + 120,
-          paddingHorizontal: 24,
-          alignItems: 'center'
-        }}
-      >
-        <View className="w-full max-w-2xl bg-navy-light/80 p-8 rounded-3xl backdrop-blur-md border border-ocean/20">
-          <Text style={{ fontFamily: 'Pacifico' }} className="text-4xl text-white mb-6 text-center">Want Radio Play?</Text>
-          
-          <View className="bg-ocean/20 p-5 rounded-2xl mb-6 border border-ocean/30">
-            <Text className="text-white text-lg font-bold leading-relaxed text-center">
-              To get free radio air-play, first listen to our station. Make sure the song you would like us to play fits our format!
-            </Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.header}>Submit Your Music</Text>
+
+      <View style={styles.section}>
+        <Text style={styles.body}>
+          Chill Radio is always looking for fresh sounds to add to our rotation.
+          If you're an artist or producer creating music that helps people focus,
+          relax, or get creative, we want to hear from you.
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subheader}>How It Works</Text>
+        <Text style={styles.body}>
+          Submit your tracks for consideration by our curation team. If your
+          music is a great fit for one of our stations, we'll add it to rotation
+          and credit you as the artist. All featured artists receive exposure to
+          our growing listener community.
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Submission Guidelines</Text>
+        {GUIDELINES.map((guideline, index) => (
+          <View key={index} style={styles.guidelineRow}>
+            <Text style={styles.bullet}>{(index + 1).toString().padStart(2, '0')}</Text>
+            <Text style={styles.guidelineText}>{guideline}</Text>
           </View>
+        ))}
+      </View>
 
-          <Text className="text-soft-sky/80 text-lg mb-6 leading-relaxed">
-            If you feel you can really make it, please send us your material. We review every submission and look for tracks that match our unique easy listening format.
-          </Text>
+      <View style={[styles.section, styles.submitCard]}>
+        <Text style={styles.cardTitle}>Ready to Submit?</Text>
+        <Text style={styles.cardBody}>
+          Send your tracks and artist info to{' '}
+          <Text style={styles.emailText}>submissions@chillradio.app</Text>
+          {'\n\n'}
+          Please use the subject line: "Track Submission — [Your Artist Name]"
+        </Text>
+      </View>
 
-          <View className="bg-navy-deep/50 p-6 rounded-2xl mb-8 border border-ocean/10">
-            <Text className="text-white font-bold text-xl mb-4">How to Submit:</Text>
-            
-            <View className="flex-row items-start mb-4">
-              <View className="w-8 h-8 rounded-full bg-ocean/20 items-center justify-center mr-3 mt-1">
-                <Text className="text-ocean font-bold">1</Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-semibold text-base mb-1">Listen First</Text>
-                <Text className="text-soft-sky/60 text-sm">Tune into our station and understand our format before submitting</Text>
-              </View>
-            </View>
-            
-            <View className="flex-row items-start mb-4">
-              <View className="w-8 h-8 rounded-full bg-ocean/20 items-center justify-center mr-3 mt-1">
-                <Text className="text-ocean font-bold">2</Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-semibold text-base mb-1">Prepare Your Music</Text>
-                <Text className="text-soft-sky/60 text-sm">High-quality audio files (WAV or 320kbps MP3). You must own the rights to the music.</Text>
-              </View>
-            </View>
-            
-            <View className="flex-row items-start">
-              <View className="w-8 h-8 rounded-full bg-ocean/20 items-center justify-center mr-3 mt-1">
-                <Text className="text-ocean font-bold">3</Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-semibold text-base mb-1">Send It In</Text>
-                <Text className="text-soft-sky/60 text-sm">Email your submission to us and we'll review it</Text>
-              </View>
-            </View>
-          </View>
-
-          <Text className="text-soft-sky/80 text-base mb-6 leading-relaxed">
-            We also offer special marketing programs for artists who are serious about making it on our station. Contact us for details.
-          </Text>
-
-          <Pressable 
-            className="bg-ocean py-4 rounded-xl items-center shadow-lg shadow-ocean/30 active:scale-95 transition-transform mb-4"
-            onPress={() => Linking.openURL('mailto:contact@easylistening.com?subject=Music%20Submission')}
-          >
-            <View className="flex-row items-center">
-              <FontAwesome name="envelope" size={18} color="#fff" />
-              <Text className="text-white font-bold text-lg ml-3">Submit Your Music</Text>
-            </View>
-          </Pressable>
-
-          <Text className="text-soft-sky/40 text-sm text-center">
-            contact@easylistening.com
-          </Text>
-        </View>
-      </ScrollView>
-    </View>
+      <View style={styles.footnoteSection}>
+        <Text style={styles.footnote}>
+          By submitting your music, you confirm that you hold all necessary
+          rights to the tracks and grant Chill Radio a non-exclusive license to
+          stream them on our platform.
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.ink,
+  },
+  contentContainer: {
+    padding: 24,
+    paddingBottom: 120,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 24,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+  },
+  subheader: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.electric,
+    marginBottom: 12,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+    letterSpacing: 0.5,
+  },
+  section: {
+    backgroundColor: 'rgba(20, 45, 79, 0.35)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 166, 255, 0.08)',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      },
+      default: {},
+    }),
+  },
+  body: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: COLORS.mist,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+  guidelineRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingLeft: 4,
+    alignItems: 'flex-start',
+  },
+  bullet: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.electric,
+    width: 28,
+    marginTop: 4,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+  guidelineText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: COLORS.mist,
+    flex: 1,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+  submitCard: {
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.electric,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+  },
+  cardBody: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: COLORS.mist,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+  emailText: {
+    color: COLORS.electric,
+    fontWeight: '700',
+  },
+  footnoteSection: {
+    paddingHorizontal: 12,
+  },
+  footnote: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: COLORS.mist,
+    opacity: 0.5,
+    fontStyle: 'italic',
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+});

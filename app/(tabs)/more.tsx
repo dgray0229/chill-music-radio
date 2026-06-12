@@ -1,27 +1,43 @@
 import React from 'react';
-import { View, Text, Pressable, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
-import { palette } from '@/constants/Colors';
 
+// ---------- palette ----------
+const C = {
+  ink: '#0B1A2E',
+  slate: '#142D4F',
+  electric: '#4DA6FF',
+  mist: '#D8E4F8',
+  mistDim: 'rgba(216,228,248,0.4)',
+  mistVeryFaint: 'rgba(216,228,248,0.2)',
+  electricDim: 'rgba(77,166,255,0.15)',
+  electricBorder: 'rgba(77,166,255,0.1)',
+  white: '#FFFFFF',
+  divider: 'rgba(77,166,255,0.1)',
+} as const;
+
+// ---------- menu data ----------
 interface MenuItem {
   name: string;
   icon: React.ComponentProps<typeof FontAwesome>['name'];
-  ionicon?: React.ComponentProps<typeof Ionicons>['name'];
   path: string;
   subtitle?: string;
 }
 
-const menuSections: { title: string; items: MenuItem[] }[] = [
+interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
+const menuSections: MenuSection[] = [
   {
     title: 'Browse',
     items: [
-      { name: 'Schedule', icon: 'calendar', path: '/schedule', subtitle: 'See what\'s playing' },
       { name: 'About Us', icon: 'info-circle', path: '/about', subtitle: 'Our story' },
-      { name: 'Want Radio Play?', icon: 'music', path: '/radio-play', subtitle: 'Submit your music' },
       { name: 'Contact', icon: 'envelope', path: '/contact', subtitle: 'Get in touch' },
+      { name: 'Want Radio Play?', icon: 'music', path: '/radio-play', subtitle: 'Submit your music' },
     ],
   },
   {
@@ -33,64 +49,48 @@ const menuSections: { title: string; items: MenuItem[] }[] = [
   },
 ];
 
+// ---------- component ----------
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width > 768;
 
   return (
-    <View className="flex-1 bg-navy-deep relative overflow-hidden">
-      <LinearGradient
-        colors={[palette.deepNavy, palette.oceanBlue]}
-        className="absolute w-full h-full opacity-30"
-      />
+    <View style={styles.container}>
       <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingTop: isDesktop ? 60 : 16,
-          paddingBottom: insets.bottom + 120,
-          paddingHorizontal: 16,
-        }}
+        style={styles.flex}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 120 },
+        ]}
       >
         {menuSections.map((section) => (
-          <View key={section.title} className="mb-6">
-            <Text className="text-soft-sky/40 text-xs font-bold uppercase tracking-wider px-4 mb-2">
-              {section.title}
-            </Text>
-            <View className="bg-navy-light/60 rounded-2xl overflow-hidden border border-ocean/10">
+          <View key={section.title} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionCard}>
               {section.items.map((item, index) => (
                 <Pressable
                   key={item.name}
                   onPress={() => router.push(item.path as any)}
-                  className="active:bg-ocean/10"
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingVertical: 14,
-                    borderBottomWidth: index < section.items.length - 1 ? 1 : 0,
-                    borderBottomColor: 'rgba(88,155,227,0.1)',
-                  }}
+                  style={({ pressed }) => [
+                    styles.menuRow,
+                    pressed && styles.menuRowPressed,
+                    index < section.items.length - 1 && styles.menuRowBorder,
+                  ]}
                 >
-                  <View style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    backgroundColor: 'rgba(88,155,227,0.15)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: 14,
-                  }}>
-                    <FontAwesome name={item.icon} size={18} color="#589BE3" />
+                  <View style={styles.iconContainer}>
+                    <FontAwesome name={item.icon} size={18} color={C.electric} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text className="text-white font-semibold text-base">{item.name}</Text>
-                    {item.subtitle && (
-                      <Text className="text-soft-sky/40 text-xs mt-0.5">{item.subtitle}</Text>
-                    )}
+                  <View style={styles.menuTextWrap}>
+                    <Text style={styles.menuLabel}>{item.name}</Text>
+                    {item.subtitle ? (
+                      <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                    ) : null}
                   </View>
-                  <FontAwesome name="chevron-right" size={12} color="rgba(228,235,252,0.25)" />
+                  <FontAwesome
+                    name="chevron-right"
+                    size={12}
+                    color={C.mistVeryFaint}
+                  />
                 </Pressable>
               ))}
             </View>
@@ -98,9 +98,9 @@ export default function MoreScreen() {
         ))}
 
         {/* Copyright */}
-        <View className="mt-4 px-4">
-          <Text className="text-soft-sky/20 text-xs text-center leading-5">
-            © 2026 EasyListening.com. All rights reserved.{'\n'}
+        <View style={styles.copyrightWrap}>
+          <Text style={styles.copyrightText}>
+            © 2026 Chill Radio. All rights reserved.{'\n'}
             Licensed with ASCAP, BMI, SESAC
           </Text>
         </View>
@@ -108,3 +108,88 @@ export default function MoreScreen() {
     </View>
   );
 }
+
+// ---------- styles ----------
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: C.ink,
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 16,
+    paddingHorizontal: 16,
+  },
+
+  // --- Section ---
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: C.mistDim,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  sectionCard: {
+    backgroundColor: 'rgba(20,45,79,0.6)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: C.electricBorder,
+  },
+
+  // --- Menu row ---
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  menuRowPressed: {
+    backgroundColor: 'rgba(77,166,255,0.1)',
+  },
+  menuRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: C.divider,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: C.electricDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  menuTextWrap: {
+    flex: 1,
+  },
+  menuLabel: {
+    color: C.white,
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  menuSubtitle: {
+    color: C.mistDim,
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // --- Copyright ---
+  copyrightWrap: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+  },
+  copyrightText: {
+    color: C.mistVeryFaint,
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});

@@ -1,12 +1,12 @@
 {
-  "short_name": "EasyListening",
-  "name": "EasyListening.com Radio Player",
-  "description": "Listen to the best easy listening music — live radio, synced lyrics, and more.",
+  "short_name": "Chill Radio",
+  "name": "Chill Radio — 24/7 Curated Music",
+  "description": "Your soundtrack for focus and flow. Stream curated lofi, easy listening, and ambient music.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#002F5E",
-  "theme_color": "#002F5E",
+  "background_color": "#0B1A2E",
+  "theme_color": "#0B1A2E",
   "icons": [
     {
       "src": "/icons/icon-192.png",

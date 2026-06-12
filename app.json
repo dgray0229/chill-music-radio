@@ -1,35 +1,38 @@
 {
   "expo": {
-    "name": "Easy Listening | Radio Station",
-    "slug": "music-player",
+    "name": "Chill Radio",
+    "slug": "chill-radio",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "musicplayer",
+    "scheme": "chillradio",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0B1A2E"
     },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
+          "audio",
           "audio"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.dgray0229.musicplayer"
+      "bundleIdentifier": "com.dgray0229.chillradio",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0B1A2E"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.dgray0229.musicplayer"
+      "package": "com.dgray0229.chillradio"
     },
     "web": {
       "bundler": "metro",
@@ -38,10 +41,16 @@
     },
     "plugins": [
       "expo-router",
-      "@morrowdigital/watermelondb-expo-plugin"
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "94c861b1-7269-401c-95ee-bc6f7a9b553b"
+      }
     }
   }
 }

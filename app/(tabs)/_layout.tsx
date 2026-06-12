@@ -1,129 +1,130 @@
 import React, { useState, useEffect } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import { View, Text, Pressable, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, Pressable, useWindowDimensions, Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import Colors, { palette } from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
-import { Sidebar } from '@/components/Sidebar';
-import { PlayerBar } from '@/components/PlayerBar';
-import { SplashOverlay } from '@/components/SplashOverlay';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { palette } from '@/src/theme/palette';
+import { NavigationRail } from '@/src/ui/NavigationRail';
+import { NowPlayingBar } from '@/src/ui/NowPlayingBar';
+import { WelcomeOverlay } from '@/src/ui/WelcomeOverlay';
+import { useAppInstall } from '@/src/hooks/useAppInstall';
+import { useKeyboardShortcuts } from '@/src/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutOverlay } from '@/src/ui/KeyboardShortcutOverlay';
+import { SleepTimerModal } from '@/src/ui/SleepTimerModal';
 
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
+function TabIcon(props: { name: React.ComponentProps<typeof FontAwesome>['name']; color: string }) {
   return <FontAwesome size={24} style={{ marginBottom: -3 }} {...props} />;
 }
 
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { showInstallOption, canInstall, isIOSSafari, promptInstall } = usePWAInstall();
+  const { visible, canPrompt, iosSafari, triggerInstall } = useAppInstall();
 
-  // Desktop breakpoint
+  // Initialize keyboard shortcuts on web
+  useKeyboardShortcuts();
+
   const isDesktop = Platform.OS === 'web' && width > 768;
   const isMobileWeb = Platform.OS === 'web' && width <= 768;
 
-  // Splash screen state
-  const [showSplash, setShowSplash] = useState(false);
+  // Welcome overlay
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      setShowSplash(true);
+      setShowWelcome(true);
       return;
     }
     try {
-      const seen = sessionStorage.getItem('splash-seen');
-      if (!seen) {
-        setShowSplash(true);
-      }
+      const seen = sessionStorage.getItem('welcome-seen');
+      if (!seen) setShowWelcome(true);
     } catch {
-      setShowSplash(true);
+      setShowWelcome(true);
     }
   }, []);
 
-  const dismissSplash = () => {
-    setShowSplash(false);
+  const dismissWelcome = () => {
+    setShowWelcome(false);
     if (Platform.OS === 'web') {
-      try {
-        sessionStorage.setItem('splash-seen', 'true');
-      } catch {}
+      try { sessionStorage.setItem('welcome-seen', 'true'); } catch {}
     }
   };
 
-  // Dismissible mobile install banner
-  const [bannerDismissed, setBannerDismissed] = useState(true); // default hidden until checked
+  // Mobile install banner
+  const [bannerHidden, setBannerHidden] = useState(true);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     try {
-      const dismissed = localStorage.getItem('pwa-banner-dismissed');
-      setBannerDismissed(dismissed === 'true');
+      const hidden = localStorage.getItem('install-banner-hidden');
+      setBannerHidden(hidden === 'true');
     } catch {
-      setBannerDismissed(false);
+      setBannerHidden(false);
     }
   }, []);
 
-  const dismissBanner = () => {
-    setBannerDismissed(true);
-    try {
-      localStorage.setItem('pwa-banner-dismissed', 'true');
-    } catch {}
+  const hideBanner = () => {
+    setBannerHidden(true);
+    try { localStorage.setItem('install-banner-hidden', 'true'); } catch {}
   };
 
   const handleMobileInstall = async () => {
-    if (canInstall) {
-      const accepted = await promptInstall();
-      if (accepted) dismissBanner();
-    } else if (isIOSSafari) {
-      // On iOS, just show the guidance (the banner text already tells them)
+    if (canPrompt) {
+      const accepted = await triggerInstall();
+      if (accepted) hideBanner();
     }
   };
 
-  const showMobileBanner = isMobileWeb && showInstallOption && !bannerDismissed;
+  const showMobileBanner = isMobileWeb && visible && !bannerHidden;
 
-  const TabContent = (
+  const TabsContent = (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: palette.oceanBlue,
-        tabBarInactiveTintColor: 'rgba(228,235,252,0.5)',
-        tabBarStyle: isDesktop ? { display: 'none' } : {
-            backgroundColor: palette.surfaceDeep,
-            borderTopWidth: 0,
-            paddingBottom: 10 + insets.bottom,
-            paddingTop: 5,
-            height: 65 + insets.bottom,
-        },
+        tabBarActiveTintColor: palette.electric,
+        tabBarInactiveTintColor: 'rgba(216,228,248,0.5)',
+        tabBarStyle: isDesktop
+          ? { display: 'none' }
+          : {
+              backgroundColor: palette.midnight,
+              borderTopWidth: 0,
+              paddingBottom: 10 + insets.bottom,
+              paddingTop: 5,
+              height: 65 + insets.bottom,
+            },
         headerStyle: {
-            backgroundColor: palette.surfaceDeep,
-            borderBottomWidth: 0,
-            elevation: 0,
-            shadowOpacity: 0,
+          backgroundColor: palette.midnight,
+          borderBottomWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         headerTintColor: '#fff',
         headerShown: !isDesktop,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Radio',
-          headerTitle: 'Easy Listening Radio',
+          headerTitle: 'Chill Radio',
           headerTitleStyle: { fontFamily: 'Pacifico', fontSize: 24, paddingBottom: 4 },
           tabBarIcon: ({ color }) => <Ionicons name="radio" size={24} color={color} style={{ marginBottom: -3 }} />,
+        }}
+      />
+      <Tabs.Screen
+        name="stations"
+        options={{
+          title: 'Stations',
+          headerTitle: 'Stations',
+          tabBarIcon: ({ color }) => <Ionicons name="radio-outline" size={24} color={color} style={{ marginBottom: -3 }} />,
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
-          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="heart" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -133,72 +134,33 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="menu" size={26} color={color} style={{ marginBottom: -3 }} />,
         }}
       />
-      {/* Pages accessible via More menu or Sidebar — hidden from tab bar */}
-      <Tabs.Screen
-        name="schedule"
-        options={{
-          title: 'Schedule',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="about"
-        options={{
-          title: 'About',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="radio-play"
-        options={{
-          title: 'Want Radio Play?',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="terms"
-        options={{
-          title: 'Terms & Conditions',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="privacy"
-        options={{
-          title: 'Privacy Policy',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="contact"
-        options={{
-          title: 'Contact',
-          href: null,
-        }}
-      />
+      {/* Hidden tabs — accessible via More/Rail */}
+      <Tabs.Screen name="schedule" options={{ title: 'Schedule', href: null }} />
+      <Tabs.Screen name="about" options={{ title: 'About', href: null }} />
+      <Tabs.Screen name="radio-play" options={{ title: 'Submit Music', href: null }} />
+      <Tabs.Screen name="terms" options={{ title: 'Terms of Service', href: null }} />
+      <Tabs.Screen name="privacy" options={{ title: 'Privacy Policy', href: null }} />
+      <Tabs.Screen name="contact" options={{ title: 'Contact', href: null }} />
     </Tabs>
   );
 
-  const MobileInstallBanner = showMobileBanner ? (
-    <View style={{
-      backgroundColor: palette.oceanBlue,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+  const MobileBanner = showMobileBanner ? (
+    <View style={styles.banner}>
+      <View style={styles.bannerContent}>
         <FontAwesome name="download" size={16} color="#fff" />
-        <Pressable onPress={handleMobileInstall} style={{ flex: 1, marginLeft: 10 }}>
-          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>
-            {isIOSSafari
-              ? <Text>Tap <Ionicons name="share-outline" size={15} color="#fff" /> → "Add to Home Screen" to install</Text>
-              : 'Install EasyListening as an app'}
+        <Pressable onPress={handleMobileInstall} style={styles.bannerTextWrap}>
+          <Text style={styles.bannerText}>
+            {iosSafari ? (
+              <Text>
+                Tap <Ionicons name="share-outline" size={15} color="#fff" /> → "Add to Home Screen" to install
+              </Text>
+            ) : (
+              'Install Chill Radio as an app'
+            )}
           </Text>
         </Pressable>
       </View>
-      <Pressable onPress={dismissBanner} style={{ padding: 4, marginLeft: 8 }}>
+      <Pressable onPress={hideBanner} style={styles.bannerClose}>
         <FontAwesome name="times" size={16} color="rgba(255,255,255,0.7)" />
       </Pressable>
     </View>
@@ -206,24 +168,70 @@ export default function TabLayout() {
 
   if (isDesktop) {
     return (
-      <View style={{ flex: 1, backgroundColor: palette.deepNavy, flexDirection: 'column' }}>
-        <View style={{ flex: 1, flexDirection: 'row' }}>
-          <Sidebar />
-          <View style={{ flex: 1 }}>
-            {TabContent}
-          </View>
+      <View style={styles.desktopRoot}>
+        <View style={styles.desktopBody}>
+          <NavigationRail />
+          <View style={styles.desktopMain}>{TabsContent}</View>
         </View>
-        <PlayerBar />
-        {showSplash && <SplashOverlay onDismiss={dismissSplash} />}
+        <NowPlayingBar />
+        {showWelcome && <WelcomeOverlay onDismiss={dismissWelcome} />}
+        <KeyboardShortcutOverlay />
+        <SleepTimerModal />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      {MobileInstallBanner}
-      {TabContent}
-      {showSplash && <SplashOverlay onDismiss={dismissSplash} />}
+    <View style={styles.mobileRoot}>
+      {MobileBanner}
+      {TabsContent}
+      {showWelcome && <WelcomeOverlay onDismiss={dismissWelcome} />}
+      <KeyboardShortcutOverlay />
+      <SleepTimerModal />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  desktopRoot: {
+    flex: 1,
+    backgroundColor: palette.ink,
+    flexDirection: 'column',
+  },
+  desktopBody: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  desktopMain: {
+    flex: 1,
+  },
+  mobileRoot: {
+    flex: 1,
+  },
+  banner: {
+    backgroundColor: palette.electric,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  bannerTextWrap: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  bannerText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  bannerClose: {
+    padding: 4,
+    marginLeft: 8,
+  },
+});

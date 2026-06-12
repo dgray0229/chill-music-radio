@@ -1,51 +1,55 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-import '../global.css';
+import { useEffect, useRef } from 'react';
+import { View, Platform } from 'react-native';
+import { PostHogProvider } from 'posthog-react-native';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { AppThemeProvider } from '@/src/theme/ThemeProvider';
+import { posthog } from '@/src/config/posthog';
+
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
-import { TrackPlayer } from '../services/player/trackPlayer';
-import { PlaybackService } from '../playbackService';
-
-TrackPlayer.registerPlaybackService(() => PlaybackService);
-
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const previousPathname = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      posthog.screen(pathname, {
+        previous_screen: previousPathname.current ?? null,
+        ...params,
+      });
+      previousPathname.current = pathname;
+    }
+  }, [pathname, params]);
+
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     Pacifico: require('../assets/fonts/Pacifico-Regular.ttf'),
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
+    if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
-  // Inject PWA head tags and register service worker at runtime (web only)
+  // Inject PWA head tags on web
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
@@ -63,17 +67,17 @@ export default function RootLayout() {
     if (!head.querySelector('meta[name="theme-color"]')) {
       const meta = document.createElement('meta');
       meta.name = 'theme-color';
-      meta.content = '#002F5E';
+      meta.content = '#0B1A2E';
       head.appendChild(meta);
     }
 
-    // Apple PWA meta tags
-    const appleTags = [
+    // Apple PWA meta
+    const appleMeta = [
       { name: 'mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { name: 'apple-mobile-web-app-title', content: 'EasyListening' },
+      { name: 'apple-mobile-web-app-title', content: 'Chill Radio' },
     ];
-    appleTags.forEach(({ name, content }) => {
+    appleMeta.forEach(({ name, content }) => {
       if (!head.querySelector(`meta[name="${name}"]`)) {
         const meta = document.createElement('meta');
         meta.name = name;
@@ -90,7 +94,7 @@ export default function RootLayout() {
       head.appendChild(link);
     }
 
-    // Register service worker
+    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((err: any) => {
         console.warn('SW registration failed:', err);
@@ -98,32 +102,24 @@ export default function RootLayout() {
     }
   }, []);
 
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
-}
-
-import { View, Platform } from 'react-native';
-
-import { PlayerProvider } from '../context/PlayerContext';
-
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  if (!loaded) return null;
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <PlayerProvider>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          </Stack>
-        </PlayerProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <PostHogProvider
+      client={posthog}
+      autocapture={{
+        captureScreens: false,
+        captureTouches: true,
+        propsToCapture: ['testID'],
+        maxElementsCaptured: 20,
+      }}
+    >
+      <AppThemeProvider>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </AppThemeProvider>
+    </PostHogProvider>
   );
 }

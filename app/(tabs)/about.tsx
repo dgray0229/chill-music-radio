@@ -1,74 +1,116 @@
 import React from 'react';
-import { View, Text, ScrollView, Platform, Pressable, Linking, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { FontAwesome } from '@expo/vector-icons';
-import { palette } from '@/constants/Colors';
+import { ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
+
+const COLORS = {
+  ink: '#0B1A2E',
+  midnight: '#061222',
+  slate: '#142D4F',
+  electric: '#4DA6FF',
+  mist: '#D8E4F8',
+};
 
 export default function AboutScreen() {
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isDesktop = Platform.OS === 'web' && width > 768;
-
   return (
-    <View className="flex-1 bg-navy-deep relative overflow-hidden">
-      <LinearGradient
-        colors={[palette.deepNavy, palette.oceanBlue]}
-        className="absolute w-full h-full opacity-30"
-      />
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ 
-          paddingTop: isDesktop ? 60 : Math.max(insets.top + 20, 40),
-          paddingBottom: isDesktop ? 60 : insets.bottom + 120,
-          paddingHorizontal: 24,
-          alignItems: 'center'
-        }}
-      >
-        <View className="w-full max-w-2xl bg-navy-light/80 p-8 rounded-3xl backdrop-blur-md border border-ocean/20">
-          <Text style={{ fontFamily: 'Pacifico' }} className="text-4xl text-white mb-6 text-center">About Us</Text>
-          
-          <Text className="text-soft-sky/80 text-lg mb-6 leading-relaxed">
-            Easy Listening plays the greatest songs ever recorded! We know that every artist and band has a soft spot in them, and that is one criteria among many that we decide what and who we play on our station.
-          </Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.header}>About Chill Radio</Text>
 
-          <Text className="text-soft-sky/80 text-lg mb-6 leading-relaxed">
-            We try to get songs that have not been overplayed over the years, and if they have, that really makes them a great song if you're hearing them on our station!
-          </Text>
+      <View style={styles.section}>
+        <Text style={styles.body}>
+          Chill Radio is your 24/7 curated radio experience, designed to help
+          you focus, relax, and unlock your creativity. Whether you're working,
+          studying, or simply unwinding, we've got the perfect soundtrack for
+          every moment.
+        </Text>
+      </View>
 
-          <View className="bg-navy-deep/50 p-6 rounded-2xl mb-6 border border-ocean/10">
-            <Text className="text-soft-sky/80 text-lg leading-relaxed">
-              We know at times we play some tracks that are just a little bit harder than other Easy Listening stations, but that's what makes us different! EasyListening.com has created a whole new type of music playlist and format than the typical listener would ever expect to hear on an Easy Listening station.
-            </Text>
-          </View>
+      <View style={styles.section}>
+        <Text style={styles.subheader}>What We Play</Text>
+        <Text style={styles.body}>
+          Our stations feature a carefully curated blend of lofi, easy listening,
+          and ambient genres. Every track is hand-selected by our team to ensure
+          a seamless, immersive listening experience — no jarring transitions, no
+          awkward silences.
+        </Text>
+      </View>
 
-          <Text className="text-soft-sky/80 text-lg mb-6 leading-relaxed">
-            Most great artists have a soft side to them and that is where our choice of songs come from. Just kick back and relax here on EasyListening.com, and enjoy our station!
-          </Text>
+      <View style={styles.section}>
+        <Text style={styles.subheader}>No Interruptions. Ever.</Text>
+        <Text style={styles.body}>
+          Chill Radio is completely free of commercial interruptions. No ads, no
+          sponsors breaking your flow. Just continuous, high-quality music
+          streaming around the clock.
+        </Text>
+      </View>
 
-          <Text className="text-soft-sky/80 text-lg mb-6 leading-relaxed">
-            If you are an indie artist — or were signed and trying to make a comeback — and want to try to make it here on our station, check out our "Want Radio Play?" page. We also offer special programs to make it on our station if you really think you're that good.
-          </Text>
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Our Mission</Text>
+        <Text style={styles.body}>
+          We believe that the right music can transform your day. Our mission is
+          to provide an effortless, always-on radio experience that enhances
+          focus, promotes relaxation, and inspires creativity — all without
+          distractions.
+        </Text>
+      </View>
 
-          <View className="bg-navy-deep/40 p-5 rounded-2xl border border-ocean/10 mb-6">
-            <View className="flex-row items-center mb-2">
-              <FontAwesome name="headphones" size={20} color="#589BE3" />
-              <Text className="text-white font-bold text-lg ml-3">No commercials, only great music!</Text>
-            </View>
-            <Text className="text-soft-sky/50 text-sm">(Real Time Streaming)</Text>
-          </View>
-
-          <Pressable onPress={() => Linking.openURL('mailto:contact@easylistening.com')}>
-            <Text className="text-ocean text-lg font-bold text-center mb-4">
-              contact@easylistening.com
-            </Text>
-          </Pressable>
-
-          <Text className="text-ocean text-xl font-bold text-center mt-2" style={{ fontFamily: 'Pacifico' }}>
-            We live for music!
-          </Text>
-        </View>
-      </ScrollView>
-    </View>
+      <View style={styles.section}>
+        <Text style={styles.subheader}>Built for You</Text>
+        <Text style={styles.body}>
+          Chill Radio is crafted with care for listeners who appreciate
+          thoughtful music curation. We're constantly evolving our stations and
+          adding new genres to keep your experience fresh and inspiring.
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.ink,
+  },
+  contentContainer: {
+    padding: 24,
+    paddingBottom: 120,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 24,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+  },
+  subheader: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.electric,
+    marginBottom: 10,
+    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+    letterSpacing: 0.5,
+  },
+  section: {
+    backgroundColor: 'rgba(20, 45, 79, 0.35)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 166, 255, 0.08)',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+      },
+      default: {},
+    }),
+  },
+  body: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: COLORS.mist,
+    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+  },
+});
