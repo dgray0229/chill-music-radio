@@ -90,24 +90,45 @@ diff --git a/ios/Core/Events/EventEmitter.swift b/ios/Core/Events/EventEmitter.s
 index abc123..def456 100644
 --- a/ios/Core/Events/EventEmitter.swift
 +++ b/ios/Core/Events/EventEmitter.swift
-@@ -46,7 +46,7 @@
+@@ -21,13 +21,11 @@
      // safe here because the scheduled closure only calls `withEventTarget`, which touches `@JavaScriptActor`-
      // isolated or `Sendable` state (the JS object, the registry, `appContext`) and the emitter's identity -
      // never the module's own mutable state.
 -    nonisolated(unsafe) weak let emitter = self
-+    nonisolated(unsafe) weak var emitter = self
- 
-     runtime.schedule {
-       guard let emitter else {
-@@ -73,7 +73,7 @@
+-
+-    runtime.schedule {
+-      guard let emitter else {
++    runtime.schedule { [weak self] in
++      guard let self else {
+         return
+       }
+-      let dispatched = emitter.withEventTarget { target in
++      let dispatched = self.withEventTarget { target in
+         dispatchEvent(event: event, payload: payload, to: target, in: runtime)
+         return true
+       }
+@@ -48,10 +46,8 @@
      // See the note in `emit(event:payload:)` above - the emitter is captured as `nonisolated(unsafe)`
      // because it isn't necessarily `Sendable`, and the scheduled closure only reaches `@JavaScriptActor`-
      // isolated or `Sendable` state through it.
 -    nonisolated(unsafe) weak let emitter = self
-+    nonisolated(unsafe) weak var emitter = self
- 
-     runtime.schedule { [weak appContext] in
-       guard let emitter, let appContext else {
+-
+-    runtime.schedule { [weak appContext] in
+-      guard let emitter, let appContext else {
++    runtime.schedule { [weak self, weak appContext] in
++      guard let self, let appContext else {
+         return
+       }
+       let jsPayload: JavaScriptValue
+@@ -61,7 +57,7 @@
+         log.warn("Failed to convert payload for event '\(event)' on \(P.self); the event will not be emitted: \(error)")
+         return
+       }
+-      let dispatched = emitter.withEventTarget { target in
++      let dispatched = self.withEventTarget { target in
+         dispatchEvent(event: event, payload: jsPayload, to: target, in: runtime)
+         return true
+       }
 diff --git a/ios/Core/SharedObjects/SharedObjectRegistry.swift b/ios/Core/SharedObjects/SharedObjectRegistry.swift
 index abc789..def012 100644
 --- a/ios/Core/SharedObjects/SharedObjectRegistry.swift

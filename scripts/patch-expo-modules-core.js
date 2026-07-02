@@ -47,7 +47,9 @@ function parsePatch(patchContent) {
         }
         currentHunks.push(currentHunk);
       }
-      currentHunk = { lines: [] };
+      const offsetMatch = line.match(/@@ -(\d+)/);
+      const offset = offsetMatch ? parseInt(offsetMatch[1], 10) : 0;
+      currentHunk = { offset: Math.max(0, offset - 1), lines: [] };
     } else {
       if (currentHunk) {
         currentHunk.lines.push(line);
@@ -67,84 +69,74 @@ function parsePatch(patchContent) {
 }
 
 function hunkAlreadyApplied(existingContent, hunkLines) {
-  const addedLines = hunkLines.filter(l => l.startsWith('+')).map(l => l.slice(1));
-  const removedLines = hunkLines.filter(l => l.startsWith('-')).map(l => l.slice(1));
+  const addedLines = hunkLines.filter(l => l.startsWith('+')).map(l => l.slice(1)).filter(l => l.trim().length > 0);
+  const removedLines = hunkLines.filter(l => l.startsWith('-')).map(l => l.slice(1)).filter(l => l.length > 0);
   if (addedLines.length === 0) return false;
 
-  // Check added lines exist
-  const hasAdditions = addedLines.filter(l => l.trim().length > 0).slice(0, 3)
-    .every(line => existingContent.includes(line));
+  const existingLines = new Set(existingContent.split('\n'));
+
+  const hasAdditions = addedLines.slice(0, 3).every(line => existingLines.has(line));
   if (!hasAdditions) return false;
 
-  // For hunks with removals, also verify removed lines are GONE
   if (removedLines.length > 0) {
-    const removalsGone = removedLines.every(line => !existingContent.includes(line));
-    return removalsGone;
+    return removedLines.every(line => !existingLines.has(line));
   }
 
   return true;
 }
 
-function applyHunk(existingContent, hunkLines) {
+function applyHunk(existingContent, hunkLines, hunkOffset) {
   if (hunkAlreadyApplied(existingContent, hunkLines)) return { status: 'already_applied' };
 
-  // Find context lines to determine insertion point
   // A hunk has lines like:
-  //  context     (no prefix) - unchanged line
-  // -removed     - line to remove  
+  //  context     (space prefix) - unchanged line
+  // -removed     - line to remove
   // +added       - line to add
-  // First pass: collect context and changes
-  const contextBefore = [];
-  const changes = [];
-  const contextAfter = [];
-  let phase = 'before';
+  //
+  // Walk through hunk and content lines in order, matching context
+  // and applying removals/additions into the result.
+  const contentLines = existingContent.split('\n');
+  const result = [];
 
-  for (const line of hunkLines) {
-    if (line.startsWith('+')) {
-      changes.push({ type: 'add', text: line.slice(1) });
-      phase = 'change';
-    } else if (line.startsWith('-')) {
-      changes.push({ type: 'remove', text: line.slice(1) });
-      phase = 'change';
-    } else {
-      // Context lines in unified diff have a leading space; strip it
-      const text = line.startsWith(' ') ? line.slice(1) : line;
-      if (phase === 'before') {
-        contextBefore.push(text);
-      } else {
-        contextAfter.push(text);
+  // Start from the hunk offset (0-indexed from @@ line)
+  let ci = hunkOffset || 0;
+
+  // Copy all lines before the hunk unchanged
+  for (let i = 0; i < ci; i++) {
+    result.push(contentLines[i]);
+  }
+
+  for (const hunkLine of hunkLines) {
+    if (hunkLine.startsWith(' ')) {
+      // Context line: must match the next content line
+      const expected = hunkLine.slice(1);
+      if (ci >= contentLines.length || contentLines[ci] !== expected) {
+        return null; // context doesn't match
       }
+      result.push(contentLines[ci]);
+      ci++;
+    } else if (hunkLine.startsWith('-')) {
+      // Removal: skip matching content line
+      const expected = hunkLine.slice(1);
+      if (ci >= contentLines.length || contentLines[ci] !== expected) {
+        return null; // removal doesn't match
+      }
+      ci++; // skip this line (removed)
+    } else if (hunkLine.startsWith('+')) {
+      // Addition: emit the new line
+      result.push(hunkLine.slice(1));
+    } else {
+      // Empty line or comment within hunk - should not occur in valid patches
     }
   }
 
-  // Check if this is a pure addition (no removals)
-  const hasRemovals = changes.some(c => c.type === 'remove');
-  const hasAdditions = changes.some(c => c.type === 'add');
-
-  if (!hasRemovals && hasAdditions) {
-    // Pure addition: find the position after the last context-before line
-    // and insert the new lines there
-    const searchStr = contextBefore.join('\n');
-    const idx = existingContent.indexOf(searchStr);
-    if (idx === -1) return null;
-    
-    const pos = idx + searchStr.length;
-    const addedLines = changes.filter(c => c.type === 'add').map(c => c.text);
-    const before = existingContent.slice(0, pos);
-    const after = existingContent.slice(pos);
-    return { status: 'applied', content: before + '\n' + addedLines.join('\n') + after };
+  // Append any remaining content lines after the patched region
+  while (ci < contentLines.length) {
+    result.push(contentLines[ci]);
+    ci++;
   }
 
-  // Has removals: more complex, try to match context
-  // Simple approach: try to find and replace the entire matched region
-  if (contextBefore.length === 0 && contextAfter.length === 0) return null;
-  const fullSearch = [...contextBefore, ...changes.map(c => c.type === 'remove' ? c.text : null).filter(Boolean), ...contextAfter].join('\n');
-  const fullReplace = [...contextBefore, ...changes.filter(c => c.type === 'add').map(c => c.text), ...contextAfter].join('\n');
-  
-  const idx = existingContent.indexOf(fullSearch);
-  if (idx === -1) return null;
-  
-  return { status: 'applied', content: existingContent.slice(0, idx) + fullReplace + existingContent.slice(idx + fullSearch.length) };
+  return { status: 'applied', content: result.join('\n') };
 }
 
 function applyPatchToDir(targetDir) {
@@ -181,14 +173,22 @@ function applyPatchToDir(targetDir) {
       const existingContent = fs.readFileSync(fullPath, 'utf-8');
       let modifiedContent = existingContent;
       let changed = false;
+      let shift = 0; // cumulative line shift from applied hunks
 
       for (const hunk of file.hunks) {
-        const result = applyHunk(modifiedContent, hunk.lines);
+        const adjustedOffset = Math.max(0, hunk.offset + shift);
+        const result = applyHunk(modifiedContent, hunk.lines, adjustedOffset);
         if (result && result.status === 'applied') {
+          const origLineCount = hunk.lines.filter(l => l.startsWith(' ') || l.startsWith('-')).length;
+          const newLineCount = hunk.lines.filter(l => l.startsWith(' ') || l.startsWith('+')).length;
+          shift += newLineCount - origLineCount;
           modifiedContent = result.content;
           changed = true;
         } else if (result && result.status === 'already_applied') {
-          // skip silently
+          // Account for the line shift from already-applied hunks too
+          const origLineCount = hunk.lines.filter(l => l.startsWith(' ') || l.startsWith('-')).length;
+          const newLineCount = hunk.lines.filter(l => l.startsWith(' ') || l.startsWith('+')).length;
+          shift += newLineCount - origLineCount;
         } else {
           console.log(`[postinstall] WARN: Could not apply hunk for ${file.path}`);
         }
