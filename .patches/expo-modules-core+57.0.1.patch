@@ -1,0 +1,88 @@
+diff --git a/ios/Legacy/EXEventEmitter.h b/ios/Legacy/EXEventEmitter.h
+new file mode 100644
+index 0000000..4d2a5e6
+--- /dev/null
++++ b/ios/Legacy/EXEventEmitter.h
+@@ -0,0 +1,12 @@
++// Copyright 2015-present 650 Industries. All rights reserved.
++
++#import <Foundation/Foundation.h>
++
++@protocol EXEventEmitter <NSObject>
++
++- (NSString *)moduleId;
++- (NSArray *)supportedEvents;
++- (void)startObserving;
++- (void)stopObserving;
++
++@end
+diff --git a/ios/Legacy/Protocols/EXEventEmitterService.h b/ios/Legacy/Protocols/EXEventEmitterService.h
+new file mode 100644
+index 0000000..9f192a8
+--- /dev/null
++++ b/ios/Legacy/Protocols/EXEventEmitterService.h
+@@ -0,0 +1,9 @@
++// Copyright 2015-present 650 Industries. All rights reserved.
++
++#import <Foundation/Foundation.h>
++
++@protocol EXEventEmitterService <NSObject>
++
++- (void)sendEventWithName:(NSString *)eventName body:(id)body;
++
++@end
+diff --git a/ios/EXLegacyExpoViewProtocol.h b/ios/EXLegacyExpoViewProtocol.h
+new file mode 100644
+index 0000000..67bbba1
+--- /dev/null
++++ b/ios/EXLegacyExpoViewProtocol.h
+@@ -0,0 +1,9 @@
++// Copyright 2022-present 650 Industries. All rights reserved.
++
++#import <ExpoModulesCore/EXModuleRegistry.h>
++
++@protocol EXLegacyExpoViewProtocol
++
++- (instancetype)initWithModuleRegistry:(nullable EXModuleRegistry *)moduleRegistry;
++
++@end
+diff --git a/ios/EXDefines.h b/ios/EXDefines.h
+index 77e4570..c41654c 100644
+--- a/ios/EXDefines.h
++++ b/ios/EXDefines.h
+@@ -76,6 +76,35 @@
+ // Converts nil -> [NSNull null]
+ #define EXNullIfNil(value) (value ?: [NSNull null])
+ 
++static inline NSError *EXErrorWithMessage(NSString *message) {
++  return [NSError errorWithDomain:@"expo" code:-1 userInfo:@{NSLocalizedDescriptionKey: message}];
++}
++
++static inline void EXFatal(NSError *error) {
++  NSLog(@"EXFatal: %@", error.localizedDescription);
++}
++
++static inline void EXLogInfo(NSString *format, ...) {
++  va_list args;
++  va_start(args, format);
++  NSLogv(format, args);
++  va_end(args);
++}
++
++static inline void EXLogWarn(NSString *format, ...) {
++  va_list args;
++  va_start(args, format);
++  NSLogv(format, args);
++  va_end(args);
++}
++
++static inline void EXLogError(NSString *format, ...) {
++  va_list args;
++  va_start(args, format);
++  NSLogv(format, args);
++  va_end(args);
++}
++
+ #import <ExpoModulesCore/Platform.h>
+ 
+ #import <Foundation/Foundation.h>

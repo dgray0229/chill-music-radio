@@ -1,0 +1,84 @@
+diff --git a/node_modules/expo-av/ios/EXAV/EXAV.m b/node_modules/expo-av/ios/EXAV/EXAV.m
+index 7153d28..7fa3b6d 100644
+--- a/node_modules/expo-av/ios/EXAV/EXAV.m
++++ b/node_modules/expo-av/ios/EXAV/EXAV.m
+@@ -1013,8 +1013,8 @@ EX_EXPORT_METHOD_AS(unloadAudioRecorder,
+ }
+ 
+ EX_EXPORT_METHOD_AS(getAvailableInputs,
+-                    resolver:(UMPromiseResolveBlock)resolve
+-                    rejecter:(UMPromiseRejectBlock)reject)
++                    resolver:(EXPromiseResolveBlock)resolve
++                    rejecter:(EXPromiseRejectBlock)reject)
+ {
+   NSMutableArray *inputs = [NSMutableArray new];
+   for (AVAudioSessionPortDescription *desc in [_kernelAudioSessionManagerDelegate availableInputs]){
+@@ -1028,8 +1028,8 @@ EX_EXPORT_METHOD_AS(getAvailableInputs,
+ }
+ 
+ EX_EXPORT_METHOD_AS(getCurrentInput,
+-                    getCurrentInput:(UMPromiseResolveBlock)resolve
+-                    rejecter:(UMPromiseRejectBlock)reject)
++                    getCurrentInput:(EXPromiseResolveBlock)resolve
++                    rejecter:(EXPromiseRejectBlock)reject)
+ {
+   AVAudioSessionPortDescription *desc = [_kernelAudioSessionManagerDelegate activeInput];
+   if (desc) {
+@@ -1045,8 +1045,8 @@ EX_EXPORT_METHOD_AS(getCurrentInput,
+ 
+ EX_EXPORT_METHOD_AS(setInput,
+                     setInput:(NSString*)input
+-                    resolver:(UMPromiseResolveBlock)resolve
+-                    rejecter:(UMPromiseRejectBlock)reject)
++                    resolver:(EXPromiseResolveBlock)resolve
++                    rejecter:(EXPromiseRejectBlock)reject)
+ {
+   AVAudioSessionPortDescription* preferredInput = nil;
+   for (AVAudioSessionPortDescription *desc in [_kernelAudioSessionManagerDelegate availableInputs]){
+diff --git a/node_modules/expo-av/ios/EXAV/EXAVTV.m b/node_modules/expo-av/ios/EXAV/EXAVTV.m
+index b6fccda..49ca270 100644
+--- a/node_modules/expo-av/ios/EXAV/EXAVTV.m
++++ b/node_modules/expo-av/ios/EXAV/EXAVTV.m
+@@ -716,23 +716,23 @@ EX_EXPORT_METHOD_AS(unloadAudioRecorder,
+ }
+ 
+ EX_EXPORT_METHOD_AS(getAvailableInputs,
+-                    resolver:(UMPromiseResolveBlock)resolve
+-                    rejecter:(UMPromiseRejectBlock)reject)
++                    resolver:(EXPromiseResolveBlock)resolve
++                    rejecter:(EXPromiseRejectBlock)reject)
+ {
+   reject(@"E_UNSUPPORTED_PLATFORM", @"Not available on TV.", nil);
+ }
+ 
+ EX_EXPORT_METHOD_AS(getCurrentInput,
+-                    getCurrentInput:(UMPromiseResolveBlock)resolve
+-                    rejecter:(UMPromiseRejectBlock)reject)
++                    getCurrentInput:(EXPromiseResolveBlock)resolve
++                    rejecter:(EXPromiseRejectBlock)reject)
+ {
+   reject(@"E_UNSUPPORTED_PLATFORM", @"Not available on TV.", nil);
+ }
+ 
+ EX_EXPORT_METHOD_AS(setInput,
+                     setInput:(NSString*)input
+-                    resolver:(UMPromiseResolveBlock)resolve
+-                    rejecter:(UMPromiseRejectBlock)reject)
++                    resolver:(EXPromiseResolveBlock)resolve
++                    rejecter:(EXPromiseRejectBlock)reject)
+ {
+   reject(@"E_UNSUPPORTED_PLATFORM", @"Not available on TV.", nil);
+ }
+diff --git a/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift b/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift
+index 4ddc324..9f8cd0d 100644
+--- a/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift
++++ b/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift
+@@ -14,7 +14,7 @@ public final class VideoViewModule: Module {
+ 
+     AsyncFunction("setFullscreen") { (viewTag: Int, value: Bool, promise: Promise) in
+       self.runBlockForView(viewTag) { view in
+-        view.contentView.setFullscreen(value, resolver: promise.resolver, rejecter: promise.legacyRejecter)
++        view.contentView.setFullscreen(value, resolver: promise.legacyResolver, rejecter: promise.legacyRejecter)
+       }
+     }
+ 
