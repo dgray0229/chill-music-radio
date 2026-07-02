@@ -255,10 +255,17 @@ function discoverInstalledLocations() {
   return Array.from(locations);
 }
 
-const discoveredDirs = discoverInstalledLocations();
+let discoveredDirs = discoverInstalledLocations();
 
 if (discoveredDirs.length === 0) {
-  console.log(`[postinstall] No ${PKG} installations found in node_modules tree`);
+  console.log(`[postinstall] Discovery found 0 ${PKG} locations, falling back to TARGET_DIRS check...`);
+  // Fallback: try TARGET_DIRS even if discovery missed them (timing/race condition)
+  discoveredDirs = TARGET_DIRS.filter(p => fs.existsSync(p));
+}
+
+if (discoveredDirs.length === 0) {
+  console.log(`[postinstall] No ${PKG} installations found (TARGET_DIRS: ${TARGET_DIRS.join(', ')})`);
+  console.log(`[postinstall] This is expected if expo is not installed or uses a different package manager layout.`);
   process.exit(0);
 }
 
