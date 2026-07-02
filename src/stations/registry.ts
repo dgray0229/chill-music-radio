@@ -7,6 +7,7 @@ export interface Station {
   coverUri: string;
   accent: string;
   hasApi: boolean;
+  desc: string;
   /** Attribution text for the stream source (displayed in UI footer). */
   attribution?: string;
 }
@@ -31,6 +32,7 @@ export const STATION_LIST: Station[] = [
       'https://somafm.com/img3/groovesalad-400.jpg',
     accent: '#5EC89B',
     hasApi: false,
+    desc: 'A nice chilled plate of ambient/downtempo beats and grooves.',
     attribution: 'SomaFM.com',
   },
   {
@@ -43,6 +45,7 @@ export const STATION_LIST: Station[] = [
     coverUri: 'https://somafm.com/img3/dronezone-400.jpg',
     accent: '#7B68EE',
     hasApi: false,
+    desc: 'Atmospheric ambient space music. Served best chilled.',
     attribution: 'SomaFM.com',
   },
   {
@@ -54,6 +57,7 @@ export const STATION_LIST: Station[] = [
     coverUri: 'https://somafm.com/img3/defcon-400.jpg',
     accent: '#00FF41',
     hasApi: false,
+    desc: 'Music for hacking. Dark electronic beats from the DEF CON conference.',
     attribution: 'SomaFM.com',
   },
   {
@@ -65,6 +69,7 @@ export const STATION_LIST: Station[] = [
     coverUri: 'https://somafm.com/img3/vaporwaves-400.jpg',
     accent: '#FF69B4',
     hasApi: false,
+    desc: 'Nostalgic retro sounds, vaporwave beats, and synthesized dreams.',
     attribution: 'SomaFM.com',
   },
   {
@@ -76,6 +81,7 @@ export const STATION_LIST: Station[] = [
     coverUri: 'https://somafm.com/img3/lush-400.jpg',
     accent: '#E67E22',
     hasApi: false,
+    desc: 'Sensuous ambient sounds, instrumental, and vocal chillout.',
     attribution: 'SomaFM.com',
   },
   {
@@ -87,6 +93,7 @@ export const STATION_LIST: Station[] = [
     coverUri: 'https://somafm.com/img3/spacestation-400.jpg',
     accent: '#4682B4',
     hasApi: false,
+    desc: 'Tune in, turn on, space out. Spaced-out ambient electronic music.',
     attribution: 'SomaFM.com',
   },
   {
@@ -98,6 +105,7 @@ export const STATION_LIST: Station[] = [
     coverUri: 'https://somafm.com/img3/fluid-400.jpg',
     accent: '#87CEFA',
     hasApi: false,
+    desc: 'Smooth instrumental hiphop and chill lofi grooves.',
     attribution: 'SomaFM.com',
   },
 ];

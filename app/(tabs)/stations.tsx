@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   useWindowDimensions,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -99,6 +100,11 @@ export default function StationsScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('All');
+
+  const GENRE_CHIPS = ['All', 'Ambient', 'Electronic', 'Lofi / Hiphop', 'Vaporwave'];
+
   const handleTune = (stationId: string) => {
     const station = STATION_LIST.find((s) => s.id === stationId);
     posthog.capture('station_tuned', {
@@ -126,6 +132,28 @@ export default function StationsScreen() {
     }
   };
 
+  const filteredStations = STATION_LIST.filter((item) => {
+    const matchesSearch = 
+      item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.desc.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (selectedGenre === 'All') return matchesSearch;
+    if (selectedGenre === 'Ambient') {
+      return matchesSearch && (item.genre.includes('Ambient') || item.genre.includes('Space') || item.genre.includes('Vocal'));
+    }
+    if (selectedGenre === 'Electronic') {
+      return matchesSearch && (item.genre.includes('Electronic') || item.genre.includes('Hacker'));
+    }
+    if (selectedGenre === 'Lofi / Hiphop') {
+      return matchesSearch && (item.genre.includes('Downtempo') || item.genre.includes('Hiphop') || item.genre.includes('Instrumental'));
+    }
+    if (selectedGenre === 'Vaporwave') {
+      return matchesSearch && (item.genre.includes('Vaporwave') || item.genre.includes('Retro'));
+    }
+    return matchesSearch;
+  });
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -141,88 +169,160 @@ export default function StationsScreen() {
           <Text style={styles.subtitle}>Select a SomaFM stream to start chilling</Text>
         </View>
 
-        <View style={[styles.list, isDesktop && styles.listDesktop]}>
-          {STATION_LIST.map((item) => {
-            const isActive = activeStation.id === item.id;
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <FontAwesome name="search" size={16} color="rgba(216, 228, 248, 0.4)" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search stations, genres..."
+            placeholderTextColor="rgba(216, 228, 248, 0.4)"
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              posthog.capture('station_search_typed', { query: text });
+            }}
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {searchQuery.length > 0 ? (
+            <Pressable
+              onPress={() => setSearchQuery('')}
+              style={({ pressed }) => [styles.clearButton, pressed && { opacity: 0.7 }]}
+            >
+              <FontAwesome name="times-circle" size={16} color="rgba(216, 228, 248, 0.5)" />
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* Category Filter Chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipsContainer}
+          contentContainerStyle={styles.chipsContent}
+        >
+          {GENRE_CHIPS.map((genre) => {
+            const isSelected = selectedGenre === genre;
             return (
               <Pressable
-                key={item.id}
-                onPress={() => handleTune(item.id)}
+                key={genre}
+                onPress={() => {
+                  setSelectedGenre(genre);
+                  posthog.capture('station_genre_filter_changed', { genre });
+                }}
                 style={({ pressed }) => [
-                  styles.card,
-                  isActive && styles.cardActive,
-                  isActive && { shadowColor: item.accent },
-                  pressed && styles.cardPressed,
-                  isDesktop && styles.cardDesktop,
+                  styles.chip,
+                  isSelected && styles.chipSelected,
+                  pressed && { opacity: 0.8 },
                 ]}
               >
-                <View style={styles.cardGlowContainer}>
-                  {isActive && (
-                    <Image
-                      source={{ uri: item.coverUri }}
-                      style={[StyleSheet.absoluteFillObject, styles.artGlow]}
-                      blurRadius={20}
-                    />
-                  )}
-                </View>
-
-                <View style={styles.cardContent}>
-                  <Image source={{ uri: item.coverUri }} style={styles.coverArt} />
-                  
-                  <View style={styles.info}>
-                    <View style={styles.titleRow}>
-                      <Text style={styles.stationName}>{item.label}</Text>
-                      {isActive && (
-                        <View style={styles.activeBadge}>
-                          {isPlaying ? (
-                            <CardEqualizer accent={item.accent} />
-                          ) : (
-                            <FontAwesome name="check-circle" size={18} color={item.accent} />
-                          )}
-                        </View>
-                      )}
-                    </View>
-                    
-                    <Text style={[styles.genre, { color: item.accent }]}>
-                      {item.genre}
-                    </Text>
-                    
-                    <Text style={styles.description} numberOfLines={2}>
-                      {item.desc}
-                    </Text>
-
-                    <View style={styles.cardActions}>
-                      <Pressable
-                        onPress={() => handleTune(item.id)}
-                        style={({ pressed }) => [
-                          styles.actionButton,
-                          { backgroundColor: 'rgba(77,166,255,0.1)' },
-                          pressed && { opacity: 0.8 },
-                        ]}
-                      >
-                        <Text style={styles.actionText}>TUNE IN</Text>
-                      </Pressable>
-
-                      {isActive && !isPlaying ? (
-                        <Pressable
-                          onPress={() => togglePlay()}
-                          style={({ pressed }) => [
-                            styles.actionButton,
-                            { backgroundColor: item.accent },
-                            pressed && { opacity: 0.8 },
-                          ]}
-                        >
-                          <FontAwesome name="play" size={12} color={C.midnight} style={{ marginRight: 6 }} />
-                          <Text style={[styles.actionText, { color: C.midnight }]}>PLAY</Text>
-                        </Pressable>
-                      ) : null}
-                    </View>
-                  </View>
-                </View>
+                <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+                  {genre}
+                </Text>
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
+
+        {filteredStations.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <FontAwesome name="search-minus" size={48} color="rgba(77, 166, 255, 0.3)" style={{ marginBottom: 16 }} />
+            <Text style={styles.emptyText}>No Stations Found</Text>
+            <Text style={styles.emptySubtext}>We couldn't find any stations matching "{searchQuery}"</Text>
+            <Pressable
+              onPress={() => {
+                setSearchQuery('');
+                setSelectedGenre('All');
+              }}
+              style={({ pressed }) => [styles.resetButton, pressed && { opacity: 0.9 }]}
+            >
+              <Text style={styles.resetButtonText}>Reset Filters</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={[styles.list, isDesktop && styles.listDesktop]}>
+            {filteredStations.map((item) => {
+              const isActive = activeStation.id === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => handleTune(item.id)}
+                  style={({ pressed }) => [
+                    styles.card,
+                    isActive && styles.cardActive,
+                    isActive && { shadowColor: item.accent },
+                    pressed && styles.cardPressed,
+                    isDesktop && styles.cardDesktop,
+                  ]}
+                >
+                  <View style={styles.cardGlowContainer}>
+                    {isActive && (
+                      <Image
+                        source={{ uri: item.coverUri }}
+                        style={[StyleSheet.absoluteFillObject, styles.artGlow]}
+                        blurRadius={20}
+                      />
+                    )}
+                  </View>
+
+                  <View style={styles.cardContent}>
+                    <Image source={{ uri: item.coverUri }} style={styles.coverArt} />
+                    
+                    <View style={styles.info}>
+                      <View style={styles.titleRow}>
+                        <Text style={styles.stationName}>{item.label}</Text>
+                        {isActive && (
+                          <View style={styles.activeBadge}>
+                            {isPlaying ? (
+                              <CardEqualizer accent={item.accent} />
+                            ) : (
+                              <FontAwesome name="check-circle" size={18} color={item.accent} />
+                            )}
+                          </View>
+                        )}
+                      </View>
+                      
+                      <Text style={[styles.genre, { color: item.accent }]}>
+                        {item.genre}
+                      </Text>
+                      
+                      <Text style={styles.description} numberOfLines={2}>
+                        {item.desc}
+                      </Text>
+
+                      <View style={styles.cardActions}>
+                        <Pressable
+                          onPress={() => handleTune(item.id)}
+                          style={({ pressed }) => [
+                            styles.actionButton,
+                            { backgroundColor: 'rgba(77,166,255,0.1)' },
+                            pressed && { opacity: 0.8 },
+                          ]}
+                        >
+                          <Text style={styles.actionText}>TUNE IN</Text>
+                        </Pressable>
+
+                        {isActive && !isPlaying ? (
+                          <Pressable
+                            onPress={() => togglePlay()}
+                            style={({ pressed }) => [
+                              styles.actionButton,
+                              { backgroundColor: item.accent },
+                              pressed && { opacity: 0.8 },
+                            ]}
+                          >
+                            <FontAwesome name="play" size={12} color={C.midnight} style={{ marginRight: 6 }} />
+                            <Text style={[styles.actionText, { color: C.midnight }]}>PLAY</Text>
+                          </Pressable>
+                        ) : null}
+                      </View>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -369,5 +469,102 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
+  },
+  // --- Search Bar styles ---
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(20, 45, 79, 0.45)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 166, 255, 0.12)',
+    paddingHorizontal: 16,
+    height: 52,
+    marginBottom: 16,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+      },
+      default: {},
+    }),
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '500',
+    paddingVertical: 8,
+  },
+  clearButton: {
+    padding: 6,
+  },
+
+  // --- Category Chips styles ---
+  chipsContainer: {
+    marginBottom: 24,
+    flexGrow: 0,
+  },
+  chipsContent: {
+    gap: 8,
+    paddingRight: 16,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(20, 45, 79, 0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(77, 166, 255, 0.08)',
+  },
+  chipSelected: {
+    backgroundColor: C.electric,
+    borderColor: C.electric,
+  },
+  chipText: {
+    color: 'rgba(216, 228, 248, 0.65)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  chipTextSelected: {
+    color: C.midnight,
+    fontWeight: '700',
+  },
+
+  // --- Empty State styles ---
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    color: C.white,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    color: C.mistDim,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  resetButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(77, 166, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(77, 166, 255, 0.3)',
+  },
+  resetButtonText: {
+    color: C.electric,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

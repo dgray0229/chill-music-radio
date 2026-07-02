@@ -8,6 +8,7 @@ import Animated, {
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
+import { usePostHog } from 'posthog-react-native';
 
 // --- Palette ---
 const INK = '#0B1A2E';
@@ -30,6 +31,7 @@ interface WelcomeOverlayProps {
 // --- Component ---
 
 export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
+  const posthog = usePostHog();
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
 
@@ -47,7 +49,8 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
   }));
 
   // Dismiss handler — fades out then calls onDismiss on JS thread
-  const handleDismiss = () => {
+  const handleDismiss = (trigger: 'button' | 'auto' = 'button') => {
+    posthog.capture('welcome_dismissed', { trigger });
     contentTranslateY.value = withTiming(10, { duration: 400, easing: Easing.in(Easing.ease) });
     containerOpacity.value = withTiming(0, { duration: 500, easing: Easing.in(Easing.ease) }, (finished) => {
       if (finished) {
@@ -63,7 +66,7 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
 
     // Auto-dismiss after 4 seconds
     const timer = setTimeout(() => {
-      handleDismiss();
+      handleDismiss('auto');
     }, 4000);
 
     return () => clearTimeout(timer);
@@ -104,7 +107,7 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
 
         {/* Start Listening button */}
         <Pressable
-          onPress={handleDismiss}
+          onPress={() => handleDismiss('button')}
           style={({ pressed }) => [
             styles.startButton,
             pressed && styles.startButtonPressed,

@@ -510,7 +510,11 @@ export default function RadioScreen() {
     return (
       <View style={[styles.historyContainer, { marginTop: 24, marginBottom: 24 }]}>
         <Pressable
-          onPress={() => setShowHistory(!showHistory)}
+          onPress={() => {
+            const next = !showHistory;
+            posthog.capture('history_toggled', { expanded: next });
+            setShowHistory(next);
+          }}
           style={({ pressed }) => [
             styles.historyHeader,
             pressed && { opacity: 0.8 },
@@ -568,25 +572,8 @@ export default function RadioScreen() {
           isDesktop && styles.scrollContentDesktop,
         ]}
       >
-        {/* Switch Station Button container */}
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerLabel}>Station:</Text>
-          <Pressable
-            onPress={() => router.push('/(tabs)/stations')}
-            style={({ pressed }) => [
-              styles.pickerWrapper,
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <View style={styles.pickerInner}>
-              <View style={styles.pickerStationInfo}>
-                <Image source={{ uri: station.coverUri }} style={styles.pickerCoverMin} />
-                <Text style={styles.pickerValueText}>{station.label}</Text>
-              </View>
-              <FontAwesome name="chevron-right" size={14} color={C.electric} style={{ marginRight: 16 }} />
-            </View>
-          </Pressable>
-        </View>
+        {/* Swipeable Station Carousel for quick discovery */}
+        <StationCarousel />
 
         <View style={styles.mainContent}>
           {/* Album Art Row */}

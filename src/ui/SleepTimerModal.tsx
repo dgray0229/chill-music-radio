@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { usePostHog } from 'posthog-react-native';
 import { useSleepTimer } from '@/src/hooks/useSleepTimer';
 
 // Palette
@@ -35,6 +36,7 @@ export function SleepTimerModal() {
   const startTimer = useSleepTimer(state => state.start);
   const cancelTimer = useSleepTimer(state => state.cancel);
 
+  const posthog = usePostHog();
   const { width } = useWindowDimensions();
   const isDesktop = Platform.OS === 'web' && width > 768;
 
@@ -95,7 +97,12 @@ export function SleepTimerModal() {
             <Text style={styles.activeSubText}>until music pauses</Text>
 
             <Pressable
-              onPress={() => cancelTimer()}
+              onPress={() => {
+                posthog.capture('sleep_timer_cancelled', {
+                  remaining_ms: remainingMs,
+                });
+                cancelTimer();
+              }}
               style={({ pressed }) => [
                 styles.cancelButton,
                 pressed && styles.cancelButtonPressed,
@@ -112,7 +119,13 @@ export function SleepTimerModal() {
               {presets.map((preset) => (
                 <Pressable
                   key={preset.label}
-                  onPress={() => startTimer(preset.ms)}
+                  onPress={() => {
+                    posthog.capture('sleep_timer_started', {
+                      duration_label: preset.label,
+                      duration_ms: preset.ms,
+                    });
+                    startTimer(preset.ms);
+                  }}
                   style={({ pressed }) => [
                     styles.presetCard,
                     pressed && styles.presetCardPressed,

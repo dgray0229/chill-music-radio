@@ -5,6 +5,7 @@ import { Tabs } from 'expo-router';
 import { View, Text, Pressable, useWindowDimensions, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { usePostHog } from 'posthog-react-native';
 import { palette } from '@/src/theme/palette';
 import { NavigationRail } from '@/src/ui/NavigationRail';
 import { NowPlayingBar } from '@/src/ui/NowPlayingBar';
@@ -19,6 +20,7 @@ function TabIcon(props: { name: React.ComponentProps<typeof FontAwesome>['name']
 }
 
 export default function TabLayout() {
+  const posthog = usePostHog();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { visible, canPrompt, iosSafari, triggerInstall } = useAppInstall();
@@ -72,6 +74,7 @@ export default function TabLayout() {
 
   const handleMobileInstall = async () => {
     if (canPrompt) {
+      posthog.capture('app_install_prompted', { platform: Platform.OS });
       const accepted = await triggerInstall();
       if (accepted) hideBanner();
     }

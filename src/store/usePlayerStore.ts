@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import { engine } from '@/src/services/audioEngine';
 import { fetchStationMetadata, lookupCoverArt, lookupLyrics, TrackInfo } from '@/src/services/radioApi';
 import { Station, INITIAL_STATION, findStation, STATION_LIST } from '@/src/stations/registry';
+import { posthog } from '@/src/config/posthog';
 
 // --- Types ---
 
@@ -212,14 +213,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     toggleMute: async () => {
-      const { volumeLevel, previousVolume } = get();
+      const { volumeLevel, previousVolume, station } = get();
       if (volumeLevel > 0) {
         // Mute
+        posthog.capture('volume_muted', {
+          previous_volume: volumeLevel,
+          station_id: station.id,
+          station_name: station.label,
+        });
         set({ previousVolume: volumeLevel, volumeLevel: 0 });
         await engine.adjustVolume(0);
       } else {
         // Unmute
         const targetVolume = previousVolume > 0 ? previousVolume : 0.5;
+        posthog.capture('volume_unmuted', {
+          restored_volume: targetVolume,
+          station_id: station.id,
+          station_name: station.label,
+        });
         set({ volumeLevel: targetVolume });
         await engine.adjustVolume(targetVolume);
       }
