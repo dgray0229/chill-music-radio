@@ -4,17 +4,25 @@ const path = require('path');
 const PKG = 'expo-modules-core';
 const VERSION = '57.0.1';
 const PATCH_FILE = path.join(__dirname, '..', '.patches', `${PKG}+${VERSION}.patch`);
-const TARGET_DIR = path.join(__dirname, '..', 'node_modules', 'expo', 'node_modules', PKG);
+const TARGET_DIRS = [
+  path.join(__dirname, '..', 'node_modules', 'expo', 'node_modules', PKG),
+  path.join(__dirname, '..', 'node_modules', PKG),
+];
 
 if (!fs.existsSync(PATCH_FILE)) {
-  console.log(`[postinstall] No patch found for ${PKG} (nested)`);
+  console.log(`[postinstall] No patch found for ${PKG}`);
   process.exit(0);
 }
 
-if (!fs.existsSync(TARGET_DIR)) {
-  console.log(`[postinstall] Target directory not found: ${TARGET_DIR}`);
+const TARGET_DIR = TARGET_DIRS.find(fs.existsSync);
+
+if (!TARGET_DIR) {
+  const dirs = TARGET_DIRS.join(', ');
+  console.log(`[postinstall] Target directory not found (tried: ${dirs})`);
   process.exit(0);
 }
+
+console.log(`[postinstall] Found ${PKG} at ${TARGET_DIR}`);
 
 const patchContent = fs.readFileSync(PATCH_FILE, 'utf-8');
 const filesToCreate = [];
