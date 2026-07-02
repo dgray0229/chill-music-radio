@@ -212,37 +212,45 @@ function applyPatchToDir(targetDir) {
   }
 }
 
-// Dynamically discover ALL installed locations of expo-modules-core using npm ls
+// Recursively walk filesystem from root to find ALL expo-modules-core installations
 function discoverInstalledLocations() {
-  const locations = new Set(TARGET_DIRS.filter(fs.existsSync));
+  const locations = new Set();
+  const root = path.join(__dirname, '..');
   
-  try {
-    // Run npm ls to find all resolution paths
-    const { execSync } = require('child_process');
-    const output = execSync('npm ls expo-modules-core --all --json 2>/dev/null || true', { encoding: 'utf-8', cwd: path.join(__dirname, '..') });
-    const npmLs = JSON.parse(output);
+  // Helper: check if a directory looks like a valid expo-modules-core package
+  function isValidExpoModulesCore(dir) {
+    try {
+      const pkgJson = path.join(dir, 'package.json');
+      if (!fs.existsSync(pkgJson)) return false;
+      const content = fs.readFileSync(pkgJson, 'utf-8');
+      return content.includes(PKG);
+    } catch (_) { return false; }
+  }
+  
+  // Helper: recursively search (with depth limit)
+  function search(dir, depth) {
+    if (depth > 8) return;
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
     
-    function walk(obj) {
-      if (!obj || typeof obj !== 'object') return;
-      if (obj.resolved && obj.version) {
-        // Find the path from resolved or from node_modules structure
-        const pkgPath = path.dirname(require.resolve('expo-modules-core/package.json', { paths: [path.join(__dirname, '..')] }));
-        if (pkgPath && fs.existsSync(pkgPath)) locations.add(pkgPath);
+    for (const entry of entries) {
+      // Always descend into node_modules, but skip other hidden dirs
+      if (entry.name.startsWith('.') && entry.name !== 'node_modules') continue;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === PKG && isValidExpoModulesCore(fullPath)) {
+          locations.add(fullPath);
+        }
+        search(fullPath, depth + 1);
       }
-      if (obj.dependencies) Object.values(obj.dependencies).forEach(walk);
     }
-    walk(npmLs);
-  } catch (_) {}
+  }
   
-  // Also check common hoisted locations
-  const candidates = [
-    path.join(__dirname, '..', 'node_modules', PKG),
-    path.join(__dirname, '..', 'node_modules', 'expo', 'node_modules', PKG),
-    // Yarn PnP or pnpm structures (if applicable)
-    path.join(__dirname, '..', '.yarn', 'cache', PKG),
-  ];
+  // Start from TARGET_DIRS (fast path for known locations)
+  TARGET_DIRS.forEach(d => { if (fs.existsSync(d) && isValidExpoModulesCore(d)) locations.add(d); });
   
-  candidates.forEach(c => { if (fs.existsSync(c)) locations.add(c); });
+  // Full recursive search from project root (catches all hoisting layouts)
+  search(root, 0);
   
   return Array.from(locations);
 }
