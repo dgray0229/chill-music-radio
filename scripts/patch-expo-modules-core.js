@@ -1,6 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// Global error handler to ensure we always get a stack trace on EAS
+process.on('uncaughtException', (err) => {
+  console.error('[postinstall] UNCAUGHT EXCEPTION:', err && err.stack ? err.stack : err);
+  process.exit(2);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[postinstall] UNHANDLED REJECTION:', reason);
+  process.exit(3);
+});
+
 const PKG = 'expo-modules-core';
 const VERSION = '57.0.1';
 const PATCH_FILE = path.join(__dirname, '..', '.patches', `${PKG}+${VERSION}.patch`);
@@ -9,12 +19,15 @@ const TARGET_DIRS = [
   path.join(__dirname, '..', 'node_modules', 'expo', 'node_modules', PKG),
 ];
 
+console.log(`[postinstall] Starting ${PKG}@${VERSION} patch script (cwd=${process.cwd()}, __dirname=${__dirname})`);
+
 if (!fs.existsSync(PATCH_FILE)) {
-  console.log(`[postinstall] No patch found for ${PKG}`);
+  console.log(`[postinstall] No patch found for ${PKG} at ${PATCH_FILE}`);
   process.exit(0);
 }
 
 const patchContent = fs.readFileSync(PATCH_FILE, 'utf-8');
+console.log(`[postinstall] Loaded patch file (${patchContent.length} bytes, ${patchContent.split('\n').length} lines)`);
 
 function parsePatch(patchContent) {
   const files = [];
