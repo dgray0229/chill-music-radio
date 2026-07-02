@@ -86,3 +86,38 @@ index 77e4570..c41654c 100644
  #import <ExpoModulesCore/Platform.h>
  
  #import <Foundation/Foundation.h>
+diff --git a/ios/Core/Events/EventEmitter.swift b/ios/Core/Events/EventEmitter.swift
+index abc123..def456 100644
+--- a/ios/Core/Events/EventEmitter.swift
++++ b/ios/Core/Events/EventEmitter.swift
+@@ -46,7 +46,7 @@
+     // safe here because the scheduled closure only calls `withEventTarget`, which touches `@JavaScriptActor`-
+     // isolated or `Sendable` state (the JS object, the registry, `appContext`) and the emitter's identity -
+     // never the module's own mutable state.
+-    nonisolated(unsafe) weak let emitter = self
++    nonisolated(unsafe) weak var emitter = self
+ 
+     runtime.schedule {
+       guard let emitter else {
+@@ -73,7 +73,7 @@
+     // See the note in `emit(event:payload:)` above - the emitter is captured as `nonisolated(unsafe)`
+     // because it isn't necessarily `Sendable`, and the scheduled closure only reaches `@JavaScriptActor`-
+     // isolated or `Sendable` state through it.
+-    nonisolated(unsafe) weak let emitter = self
++    nonisolated(unsafe) weak var emitter = self
+ 
+     runtime.schedule { [weak appContext] in
+       guard let emitter, let appContext else {
+diff --git a/ios/Core/SharedObjects/SharedObjectRegistry.swift b/ios/Core/SharedObjects/SharedObjectRegistry.swift
+index abc789..def012 100644
+--- a/ios/Core/SharedObjects/SharedObjectRegistry.swift
++++ b/ios/Core/SharedObjects/SharedObjectRegistry.swift
+@@ -34,7 +34,7 @@
+   /**
+    Weak reference to the app context for the registry.
+    */
+-  private weak let appContext: AppContext?
++  private weak var appContext: AppContext?
+ 
+   internal struct State: Sendable {
+     /**

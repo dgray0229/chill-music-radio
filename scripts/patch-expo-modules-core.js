@@ -41,7 +41,12 @@ function parsePatch(patchContent) {
     } else if (line.startsWith('+++ ')) {
       // skip +++ b/path
     } else if (line.startsWith('@@ ')) {
-      if (currentHunk) currentHunks.push(currentHunk);
+      if (currentHunk) {
+        while (currentHunk.lines.length > 0 && currentHunk.lines[currentHunk.lines.length - 1] === '') {
+          currentHunk.lines.pop();
+        }
+        currentHunks.push(currentHunk);
+      }
       currentHunk = { lines: [] };
     } else {
       if (currentHunk) {
@@ -50,7 +55,12 @@ function parsePatch(patchContent) {
     }
   }
   if (currentFile) {
-    if (currentHunk) currentHunks.push(currentHunk);
+    if (currentHunk) {
+      while (currentHunk.lines.length > 0 && currentHunk.lines[currentHunk.lines.length - 1] === '') {
+        currentHunk.lines.pop();
+      }
+      currentHunks.push(currentHunk);
+    }
     if (currentHunks.length > 0) files.push({ path: currentFile, hunks: currentHunks });
   }
   return files;
@@ -58,9 +68,21 @@ function parsePatch(patchContent) {
 
 function hunkAlreadyApplied(existingContent, hunkLines) {
   const addedLines = hunkLines.filter(l => l.startsWith('+')).map(l => l.slice(1));
+  const removedLines = hunkLines.filter(l => l.startsWith('-')).map(l => l.slice(1));
   if (addedLines.length === 0) return false;
-  const sampleLines = addedLines.filter(l => l.trim().length > 0).slice(0, 3);
-  return sampleLines.every(line => existingContent.includes(line));
+
+  // Check added lines exist
+  const hasAdditions = addedLines.filter(l => l.trim().length > 0).slice(0, 3)
+    .every(line => existingContent.includes(line));
+  if (!hasAdditions) return false;
+
+  // For hunks with removals, also verify removed lines are GONE
+  if (removedLines.length > 0) {
+    const removalsGone = removedLines.every(line => !existingContent.includes(line));
+    return removalsGone;
+  }
+
+  return true;
 }
 
 function applyHunk(existingContent, hunkLines) {
@@ -92,7 +114,6 @@ function applyHunk(existingContent, hunkLines) {
       } else {
         contextAfter.push(text);
       }
-      phase = 'after';
     }
   }
 
