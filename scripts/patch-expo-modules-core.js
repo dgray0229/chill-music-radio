@@ -111,8 +111,27 @@ function applyHunk(existingContent, hunkLines, hunkOffset) {
   const contentLines = existingContent.split('\n');
   const result = [];
 
-  // Start from the hunk offset (0-indexed from @@ line)
+  // Find the starting position by searching for the first context line
+  // (offsets in patch files may be stale if the file changed)
   let ci = hunkOffset || 0;
+  const firstContextLine = hunkLines.find(l => l.startsWith(' '));
+  if (firstContextLine) {
+    const expected = firstContextLine.slice(1);
+    // Search from offset backwards and forwards to find the context
+    let found = false;
+    for (let delta = 0; delta <= Math.max(50, contentLines.length); delta++) {
+      for (const dir of delta === 0 ? [0] : [-1, 1]) {
+        const tryIdx = ci + delta * dir;
+        if (tryIdx >= 0 && tryIdx < contentLines.length && contentLines[tryIdx] === expected) {
+          ci = tryIdx;
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    if (!found) return null; // context not found
+  }
 
   // Copy all lines before the hunk unchanged
   for (let i = 0; i < ci; i++) {
