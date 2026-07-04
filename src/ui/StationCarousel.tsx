@@ -317,13 +317,13 @@ export function StationCarousel() {
 
 const carouselStyles = StyleSheet.create({
   wrapper: {
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   headerLabel: {
     color: 'rgba(228,235,252,0.4)',

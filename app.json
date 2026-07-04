@@ -16,9 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ],
+        "UIBackgroundModes": ["audio"],
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.dgray0229.chillradio",
@@ -41,12 +39,16 @@
     "plugins": [
       "expo-router",
       "expo-localization",
+      "expo-audio",
       "./plugins/removeMicPermission",
       [
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "16.4"
+            "deploymentTarget": "16.4",
+            "swiftStrictConcurrency": "minimal",
+            "useFrameworks": "static",
+            "usePrecompiledModules": false
           }
         }
       ]

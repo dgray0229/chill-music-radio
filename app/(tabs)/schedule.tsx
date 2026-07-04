@@ -1,24 +1,31 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, Platform } from 'react-native';
-import { usePostHog } from 'posthog-react-native';
-import { fetchSchedule, ScheduleEntry } from '@/src/services/radioApi';
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  ActivityIndicator,
+  StyleSheet,
+  Platform,
+} from "react-native";
+import { usePostHog } from "@/src/config/usePostHog";
+import { fetchSchedule, ScheduleEntry } from "@/src/services/radioApi";
 
 // ---------- palette ----------
 const C = {
-  ink: '#0B1A2E',
-  slate: '#142D4F',
-  electric: '#4DA6FF',
-  mist: '#D8E4F8',
-  mistDim: 'rgba(216,228,248,0.6)',
-  white: '#FFFFFF',
+  ink: "#0B1A2E",
+  slate: "#142D4F",
+  electric: "#4DA6FF",
+  mist: "#D8E4F8",
+  mistDim: "rgba(216,228,248,0.6)",
+  white: "#FFFFFF",
 } as const;
 
 // ---------- helpers ----------
 function formatTime(dateStr: string): string {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   try {
-    const d = new Date(dateStr.replace(' ', 'T') + 'Z');
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(dateStr.replace(" ", "T") + "Z");
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } catch {
     return dateStr;
   }
@@ -31,7 +38,7 @@ export default function ScheduleScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    posthog.capture('schedule_viewed');
+    posthog.capture("schedule_viewed");
   }, [posthog]);
 
   useEffect(() => {
@@ -42,7 +49,7 @@ export default function ScheduleScreen() {
         const data = await fetchSchedule();
         if (!cancelled) setSchedule(data);
       } catch (err) {
-        console.warn('[ScheduleScreen] Failed to load schedule:', err);
+        console.warn("[ScheduleScreen] Failed to load schedule:", err);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -113,15 +120,15 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: "700",
+    color: "#FFFFFF",
     marginBottom: 24,
-    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+    fontFamily: Platform.OS === "web" ? "DM Sans" : undefined,
   },
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: C.ink,
   },
   listContent: {
@@ -130,17 +137,17 @@ const styles = StyleSheet.create({
 
   // --- Card ---
   card: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(20, 45, 79, 0.35)',
+    flexDirection: "row",
+    backgroundColor: "rgba(20, 45, 79, 0.35)",
     borderRadius: 16,
     marginBottom: 14,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: 'rgba(77, 166, 255, 0.08)',
+    borderColor: "rgba(77, 166, 255, 0.08)",
     ...Platform.select({
       web: {
-        backdropFilter: 'blur(20px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+        backdropFilter: "blur(20px) saturate(160%)",
+        WebkitBackdropFilter: "blur(20px) saturate(160%)",
       },
       default: {},
     }),
@@ -155,32 +162,32 @@ const styles = StyleSheet.create({
   },
   showName: {
     color: C.white,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 18,
     marginBottom: 8,
-    fontFamily: Platform.OS === 'web' ? 'DM Sans' : undefined,
+    fontFamily: Platform.OS === "web" ? "DM Sans" : undefined,
   },
   timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   timeText: {
     color: C.mistDim,
-    fontWeight: '500',
+    fontWeight: "500",
     fontSize: 13,
-    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+    fontFamily: Platform.OS === "web" ? "Inter" : undefined,
   },
 
   // --- Empty ---
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingBottom: 80,
   },
   emptyText: {
     color: C.mistDim,
     fontSize: 15,
-    fontFamily: Platform.OS === 'web' ? 'Inter' : undefined,
+    fontFamily: Platform.OS === "web" ? "Inter" : undefined,
   },
 });

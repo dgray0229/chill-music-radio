@@ -8,7 +8,7 @@ import Animated, {
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
-import { usePostHog } from 'posthog-react-native';
+import { usePostHog } from '@/src/config/usePostHog';
 
 // --- Palette ---
 const INK = '#0B1A2E';

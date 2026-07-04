@@ -1,8 +1,73 @@
+diff --git a/node_modules/expo-av/ios/EXAV/EXAV.h b/node_modules/expo-av/ios/EXAV/EXAV.h
+index 42a79e1..9240290 100644
+--- a/node_modules/expo-av/ios/EXAV/EXAV.h
++++ b/node_modules/expo-av/ios/EXAV/EXAV.h
+@@ -7,9 +7,46 @@
+ #import <ExpoModulesCore/EXModuleRegistryConsumer.h>
+ #import <ExpoModulesCore/EXAppLifecycleListener.h>
+ #import <ExpoModulesCore/EXExportedModule.h>
+-#import <ExpoModulesCore/EXEventEmitter.h>
+ #import <EXAV/EXAVObject.h>
+ 
++// EXEventEmitter protocol - defined locally as it was removed from ExpoModulesCore XCFramework
++@protocol EXEventEmitter <NSObject>
++- (NSString *)moduleId;
++- (NSArray *)supportedEvents;
++- (void)startObserving;
++- (void)stopObserving;
++@end
++
++// Inline helpers - ExpoModulesCore XCFramework does not include these
++static inline NSError *EXErrorWithMessage(NSString *message) {
++  return [NSError errorWithDomain:@"expo" code:-1 userInfo:@{NSLocalizedDescriptionKey: message}];
++}
++
++static inline void EXFatal(NSError *error) {
++  NSLog(@"EXFatal: %@", error.localizedDescription);
++}
++
++static inline void EXLogInfo(NSString *format, ...) {
++  va_list args;
++  va_start(args, format);
++  NSLogv(format, args);
++  va_end(args);
++}
++
++static inline void EXLogWarn(NSString *format, ...) {
++  va_list args;
++  va_start(args, format);
++  NSLogv(format, args);
++  va_end(args);
++}
++
++static inline void EXLogError(NSString *format, ...) {
++  va_list args;
++  va_start(args, format);
++  NSLogv(format, args);
++  va_end(args);
++}
++
+ typedef NS_OPTIONS(NSUInteger, EXAudioInterruptionMode)
+ {
+   EXAudioInterruptionModeMixWithOthers = 0,
 diff --git a/node_modules/expo-av/ios/EXAV/EXAV.m b/node_modules/expo-av/ios/EXAV/EXAV.m
-index 7153d28..7fa3b6d 100644
+index 7153d28..a091cb6 100644
 --- a/node_modules/expo-av/ios/EXAV/EXAV.m
 +++ b/node_modules/expo-av/ios/EXAV/EXAV.m
-@@ -1013,8 +1013,8 @@ EX_EXPORT_METHOD_AS(unloadAudioRecorder,
+@@ -3,7 +3,11 @@
+ #import <AVFoundation/AVFoundation.h>
+ 
+ #import <ExpoModulesCore/EXUIManager.h>
+-#import <ExpoModulesCore/EXEventEmitterService.h>
++// EXEventEmitterService protocol - defined locally as it was removed from ExpoModulesCore XCFramework
++@protocol EXEventEmitterService <NSObject>
++- (void)sendEventWithName:(NSString *)eventName body:(id)body;
++@end
++
+ #import <ExpoModulesCore/EXAppLifecycleService.h>
+ #import <ExpoModulesCore/EXFileSystemInterface.h>
+ #import <ExpoModulesCore/EXPermissionsInterface.h>
+@@ -1013,8 +1017,8 @@ EX_EXPORT_METHOD_AS(unloadAudioRecorder,
  }
  
  EX_EXPORT_METHOD_AS(getAvailableInputs,
@@ -13,7 +78,7 @@ index 7153d28..7fa3b6d 100644
  {
    NSMutableArray *inputs = [NSMutableArray new];
    for (AVAudioSessionPortDescription *desc in [_kernelAudioSessionManagerDelegate availableInputs]){
-@@ -1028,8 +1028,8 @@ EX_EXPORT_METHOD_AS(getAvailableInputs,
+@@ -1028,8 +1032,8 @@ EX_EXPORT_METHOD_AS(getAvailableInputs,
  }
  
  EX_EXPORT_METHOD_AS(getCurrentInput,
@@ -24,7 +89,7 @@ index 7153d28..7fa3b6d 100644
  {
    AVAudioSessionPortDescription *desc = [_kernelAudioSessionManagerDelegate activeInput];
    if (desc) {
-@@ -1045,8 +1045,8 @@ EX_EXPORT_METHOD_AS(getCurrentInput,
+@@ -1045,8 +1049,8 @@ EX_EXPORT_METHOD_AS(getCurrentInput,
  
  EX_EXPORT_METHOD_AS(setInput,
                      setInput:(NSString*)input
@@ -36,10 +101,23 @@ index 7153d28..7fa3b6d 100644
    AVAudioSessionPortDescription* preferredInput = nil;
    for (AVAudioSessionPortDescription *desc in [_kernelAudioSessionManagerDelegate availableInputs]){
 diff --git a/node_modules/expo-av/ios/EXAV/EXAVTV.m b/node_modules/expo-av/ios/EXAV/EXAVTV.m
-index b6fccda..49ca270 100644
+index b6fccda..94aa84e 100644
 --- a/node_modules/expo-av/ios/EXAV/EXAVTV.m
 +++ b/node_modules/expo-av/ios/EXAV/EXAVTV.m
-@@ -716,23 +716,23 @@ EX_EXPORT_METHOD_AS(unloadAudioRecorder,
+@@ -3,7 +3,11 @@
+ #import <AVFoundation/AVFoundation.h>
+ 
+ #import <ExpoModulesCore/EXUIManager.h>
+-#import <ExpoModulesCore/EXEventEmitterService.h>
++// EXEventEmitterService protocol - defined locally as it was removed from ExpoModulesCore XCFramework
++@protocol EXEventEmitterService <NSObject>
++- (void)sendEventWithName:(NSString *)eventName body:(id)body;
++@end
++
+ #import <ExpoModulesCore/EXAppLifecycleService.h>
+ #import <ExpoModulesCore/EXFileSystemInterface.h>
+ #import <ExpoModulesCore/EXPermissionsInterface.h>
+@@ -716,23 +720,23 @@ EX_EXPORT_METHOD_AS(unloadAudioRecorder,
  }
  
  EX_EXPORT_METHOD_AS(getAvailableInputs,
@@ -69,6 +147,209 @@ index b6fccda..49ca270 100644
  {
    reject(@"E_UNSUPPORTED_PLATFORM", @"Not available on TV.", nil);
  }
+diff --git a/node_modules/expo-av/ios/EXAV/EXAudioRecordingPermissionRequester.m b/node_modules/expo-av/ios/EXAV/EXAudioRecordingPermissionRequester.m
+index 7d8375a..b23881c 100644
+--- a/node_modules/expo-av/ios/EXAV/EXAudioRecordingPermissionRequester.m
++++ b/node_modules/expo-av/ios/EXAV/EXAudioRecordingPermissionRequester.m
+@@ -1,7 +1,15 @@
+ // Copyright 2016-present 650 Industries. All rights reserved.
+ 
+ #import <EXAV/EXAudioRecordingPermissionRequester.h>
+-#import <ExpoModulesCore/EXDefines.h>
++
++// Inline helpers - ExpoModulesCore XCFramework does not include these
++static inline NSError *EXErrorWithMessage(NSString *message) {
++  return [NSError errorWithDomain:@"expo" code:-1 userInfo:@{NSLocalizedDescriptionKey: message}];
++}
++
++static inline void EXFatal(NSError *error) {
++  NSLog(@"EXFatal: %@", error.localizedDescription);
++}
+ 
+ #import <AVFoundation/AVFoundation.h>
+ #import <objc/message.h>
+diff --git a/node_modules/expo-av/ios/EXAV/ExpoVideoView.swift b/node_modules/expo-av/ios/EXAV/ExpoVideoView.swift
+index bc34aba..8cf0b9b 100644
+--- a/node_modules/expo-av/ios/EXAV/ExpoVideoView.swift
++++ b/node_modules/expo-av/ios/EXAV/ExpoVideoView.swift
+@@ -3,83 +3,94 @@
+ import ExpoModulesCore
+ 
+ public final class ExpoVideoView: ExpoView {
+-  private(set) var contentView: EXVideoView
++    private(set) var contentView: EXVideoView
+ 
+-  private let onLoadStart = EventDispatcher()
+-  private let onLoad = EventDispatcher()
+-  private let onError = EventDispatcher()
+-  private let onStatusUpdate = EventDispatcher()
+-  private let onReadyForDisplay = EventDispatcher()
+-  private let onFullscreenUpdate = EventDispatcher()
++    private let onLoadStart = EventDispatcher()
++    private let onLoad = EventDispatcher()
++    private let onError = EventDispatcher()
++    private let onStatusUpdate = EventDispatcher()
++    private let onReadyForDisplay = EventDispatcher()
++    private let onFullscreenUpdate = EventDispatcher()
+ 
+-  required init(appContext: AppContext? = nil) {
+-    guard let legacyModuleRegistry = appContext?.legacyModuleRegistry else {
+-      fatalError("Unable to get the legacyModuleRegistry from appContext.")
+-    }
+-    guard let contentView = EXVideoView(moduleRegistry: legacyModuleRegistry) else {
+-      fatalError("Unable to create EXVideoView.")
+-    }
+-    self.contentView = contentView
+-    super.init(appContext: appContext)
+-    self.addSubview(self.contentView)
++    required init(appContext: AppContext? = nil) {
++        // Access legacyModuleRegistry via ObjC protocol since Swift module interface doesn't expose it
++        var legacyModuleRegistry: EXModuleRegistry?
++        if let appContext = appContext {
++            if let legacyRegistry = (appContext as EXAppContextProtocol).legacyModuleRegistry {
++                legacyModuleRegistry = legacyRegistry
++            } else {
++                // Fall back: ModuleRegistry might be bridged to EXModuleRegistry
++                legacyModuleRegistry = appContext.moduleRegistry as? EXModuleRegistry
++            }
++        }
+ 
+-    contentView.onLoadStart = createEventBinding(onLoadStart)
+-    contentView.onLoad = createEventBinding(onLoad)
+-    contentView.onError = createEventBinding(onError)
+-    contentView.onStatusUpdate = createEventBinding(onStatusUpdate)
+-    contentView.onReadyForDisplay = createEventBinding(onReadyForDisplay)
+-    contentView.onFullscreenUpdate = createEventBinding(onFullscreenUpdate)
+-  }
++        guard let legacyModuleRegistry = legacyModuleRegistry else {
++            fatalError("Unable to get the moduleRegistry from appContext.")
++        }
++        guard let contentView = EXVideoView(moduleRegistry: legacyModuleRegistry) else {
++            fatalError("Unable to create EXVideoView.")
++        }
++        self.contentView = contentView
++        super.init(appContext: appContext)
++        self.addSubview(self.contentView)
+ 
+-  public override func layoutSubviews() {
+-    super.layoutSubviews()
+-    self.contentView.frame = bounds
+-  }
+-
+-  var status: [AnyHashable: Any] {
+-    get {
+-      return contentView.status
+-    }
+-    set {
+-      contentView.status = newValue
++        contentView.onLoadStart = createEventBinding(onLoadStart)
++        contentView.onLoad = createEventBinding(onLoad)
++        contentView.onError = createEventBinding(onError)
++        contentView.onStatusUpdate = createEventBinding(onStatusUpdate)
++        contentView.onReadyForDisplay = createEventBinding(onReadyForDisplay)
++        contentView.onFullscreenUpdate = createEventBinding(onFullscreenUpdate)
+     }
+-  }
+ 
+-  var useNativeControls: Bool {
+-    get {
+-      return contentView.useNativeControls
++    public override func layoutSubviews() {
++        super.layoutSubviews()
++        self.contentView.frame = bounds
+     }
+-    set {
+-      contentView.useNativeControls = newValue
+-    }
+-  }
+ 
+-  var source: [AnyHashable: Any] {
+-    get {
+-      return contentView.source
++    var status: [AnyHashable: Any] {
++        get {
++            return contentView.status
++        }
++        set {
++            contentView.status = newValue
++        }
+     }
+-    set {
+-      contentView.source = newValue
++
++    var useNativeControls: Bool {
++        get {
++            return contentView.useNativeControls
++        }
++        set {
++            contentView.useNativeControls = newValue
++        }
+     }
+-  }
+ 
+-  var nativeResizeMode: String {
+-    get {
+-      return contentView.nativeResizeMode
++    var source: [AnyHashable: Any] {
++        get {
++            return contentView.source
++        }
++        set {
++            contentView.source = newValue
++        }
+     }
+-    set {
+-      contentView.nativeResizeMode = newValue
++
++    var nativeResizeMode: String {
++        get {
++            return contentView.nativeResizeMode
++        }
++        set {
++            contentView.nativeResizeMode = newValue
++        }
+     }
+-  }
+ 
+-  /**
+-   Create a binding from `EventDispatcher` to `EXDirectEventBlock`.
+-   */
+-  private func createEventBinding(_ target: EventDispatcher) -> EXDirectEventBlock {
+-    return { body in
+-      if let payload = body as? [String: Any] {
+-        target(payload)
+-      }
++    /**
++     Create a binding from `EventDispatcher` to `EXDirectEventBlock`.
++     */
++    private func createEventBinding(_ target: EventDispatcher) -> EXDirectEventBlock {
++        return { body in
++            if let payload = body as? [String: Any] {
++                target(payload)
++            }
++        }
+     }
+-  }
+ }
+diff --git a/node_modules/expo-av/ios/EXAV/Video/EXVideoView.h b/node_modules/expo-av/ios/EXAV/Video/EXVideoView.h
+index f7ff4ee..a9ef2e9 100644
+--- a/node_modules/expo-av/ios/EXAV/Video/EXVideoView.h
++++ b/node_modules/expo-av/ios/EXAV/Video/EXVideoView.h
+@@ -1,7 +1,13 @@
+ // Copyright 2015-present 650 Industries. All rights reserved.
+ 
+ #import <ExpoModulesCore/EXModuleRegistry.h>
+-#import <ExpoModulesCore/EXLegacyExpoViewProtocol.h>
++
++// EXLegacyExpoViewProtocol - defined locally as it was removed from ExpoModulesCore XCFramework
++@protocol EXLegacyExpoViewProtocol <NSObject>
++
++@property (nonatomic, strong, readonly) EXModuleRegistry *moduleRegistry;
++
++@end
+ 
+ #import <EXAV/EXAVObject.h>
+ #import <EXAV/EXVideoPlayerViewControllerDelegate.h>
 diff --git a/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift b/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift
 index 4ddc324..9f8cd0d 100644
 --- a/node_modules/expo-av/ios/EXAV/Video/VideoViewModule.swift

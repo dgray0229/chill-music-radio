@@ -1,8 +1,8 @@
 // AudioEngine — stream playback abstraction
-// Uses expo-av for all platforms (web + native)
+// Uses expo-audio for all platforms (web + native)
 
 import { Platform } from 'react-native';
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
 let IcecastMetadataPlayer: any = null;
 if (Platform.OS === 'web') {
@@ -26,7 +26,8 @@ class AudioEngine {
   private ready = false;
   private initializing = false;
   private isWeb = Platform.OS === 'web';
-  private sound: Audio.Sound | null = null;
+  private sound: AudioPlayer | null = null;
+  private soundSubscription: { remove: () => void } | null = null;
   private icecast: any = null;
 
   public onStreamMetadata: MetadataHandler | null = null;
@@ -36,13 +37,11 @@ class AudioEngine {
     this.initializing = true;
 
     try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        interruptionModeIOS: InterruptionModeIOS.DuckOthers,
-        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        interruptionMode: 'duckOthers',
+        shouldRouteThroughEarpiece: false,
       });
       this.ready = true;
     } catch (err) {
@@ -71,25 +70,20 @@ class AudioEngine {
 
         this.updateMediaSession(meta, endpoint);
       } else {
-        // Native (iOS/Android) + Web fallback: use expo-av
+        // Native (iOS/Android) + Web fallback: use expo-audio
         await this.disposeResources();
 
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: endpoint },
-          {
-            shouldPlay: true,
-            isLooping: false,
-            volume: 1.0,
-          }
-        );
-        this.sound = sound;
+        const player = createAudioPlayer(endpoint);
+        this.sound = player;
 
         // Listen for playback status updates (errors, buffering, etc.)
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if ('error' in status) {
-            console.warn('[AudioEngine] Playback error:', (status as any).error);
+        this.soundSubscription = player.addListener('playbackStatusUpdate', (status) => {
+          if (status.error) {
+            console.warn('[AudioEngine] Playback error:', status.error);
           }
         });
+
+        player.play();
 
         if (this.isWeb) {
           this.updateMediaSession(meta, endpoint);
@@ -106,7 +100,7 @@ class AudioEngine {
     }
     if (this.sound) {
       try {
-        await this.sound.pauseAsync();
+        this.sound.pause();
       } catch {
         // ignore
       }
@@ -123,7 +117,7 @@ class AudioEngine {
     }
     if (this.sound) {
       try {
-        await this.sound.setVolumeAsync(level);
+        this.sound.setVolume(level);
       } catch {
         // ignore
       }
@@ -133,9 +127,13 @@ class AudioEngine {
   // --- Private ---
 
   private async disposeResources(): Promise<void> {
+    if (this.soundSubscription) {
+      try { this.soundSubscription.remove(); } catch {}
+      this.soundSubscription = null;
+    }
     if (this.sound) {
-      try { await this.sound.stopAsync(); } catch {}
-      try { await this.sound.unloadAsync(); } catch {}
+      try { this.sound.stop(); } catch {}
+      try { this.sound.release(); } catch {}
       this.sound = null;
     }
     if (this.icecast) {

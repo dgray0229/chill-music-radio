@@ -19,7 +19,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { usePostHog } from 'posthog-react-native';
+import { usePostHog } from '@/src/config/usePostHog';
 import { usePlayerStore } from '@/src/store/usePlayerStore';
 import { STATION_LIST, Station } from '@/src/stations/registry';
 
@@ -133,7 +133,7 @@ export default function StationsScreen() {
   };
 
   const filteredStations = STATION_LIST.filter((item) => {
-    const matchesSearch = 
+    const matchesSearch =
       item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.desc.toLowerCase().includes(searchQuery.toLowerCase());
@@ -267,7 +267,7 @@ export default function StationsScreen() {
 
                   <View style={styles.cardContent}>
                     <Image source={{ uri: item.coverUri }} style={styles.coverArt} />
-                    
+
                     <View style={styles.info}>
                       <View style={styles.titleRow}>
                         <Text style={styles.stationName}>{item.label}</Text>
@@ -281,11 +281,11 @@ export default function StationsScreen() {
                           </View>
                         )}
                       </View>
-                      
+
                       <Text style={[styles.genre, { color: item.accent }]}>
                         {item.genre}
                       </Text>
-                      
+
                       <Text style={styles.description} numberOfLines={2}>
                         {item.desc}
                       </Text>

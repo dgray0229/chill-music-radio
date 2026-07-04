@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
-import { usePostHog } from 'posthog-react-native';
+import { usePostHog } from '@/src/config/usePostHog';
 
 const COLORS = {
   ink: '#0B1A2E',
