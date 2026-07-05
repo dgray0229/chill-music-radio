@@ -21,7 +21,6 @@ module.exports = {
       ITSAppUsesNonExemptEncryption: false,
     },
     bundleIdentifier: "com.dgray0229.chillradio",
-    buildNumber: "1",
   },
   android: {
     adaptiveIcon: {
